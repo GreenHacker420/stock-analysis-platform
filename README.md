@@ -12,6 +12,27 @@ A comprehensive ChatGPT-like stock analysis platform with AI-powered insights, r
 - **Technical Indicators**: RSI, MACD, SMA, EMA calculations
 - **Risk Assessment**: Portfolio diversification and concentration analysis
 
+### 🎨 Advanced 3D Visualizations
+- **3D Portfolio Visualization**: Interactive 3D donut charts showing portfolio allocation by sector/stock with hover effects and smooth animations
+- **3D Stock Performance Cubes**: Dynamic 3D bar charts displaying stock performance over time with depth and perspective
+- **Interactive 3D Market Globe**: Rotating 3D globe showing global market performance with clickable regions
+- **3D Risk Assessment Pyramid**: Multi-layered 3D pyramid visualization showing risk levels across different portfolio segments
+
+### 📊 Advanced Charts & Analytics
+- **Real-time Candlestick Charts**: Interactive candlestick charts with zoom, pan, and technical indicator overlays (RSI, MACD, Bollinger Bands)
+- **Multi-dimensional Scatter Plots**: 3D scatter plots showing risk vs. return vs. market cap relationships
+- **Animated Line Charts**: Smooth animated line charts for portfolio performance over time with gradient fills
+- **Heatmap Visualizations**: Interactive sector performance heatmaps with color-coded performance indicators
+- **Correlation Matrix Charts**: Visual correlation matrices showing relationships between different stocks/sectors
+
+### 🎯 UI/UX Enhancements
+- **Glassmorphism Effects**: Modern glass-like effects on chart containers with backdrop blur
+- **Dark/Light Theme Toggle**: Seamless theme switching for all visualizations with system preference detection
+- **Loading Skeletons**: Smooth loading animations for chart components
+- **Chart Customization**: Extensive options for colors, time ranges, and technical indicators
+- **Export Functionality**: Export charts as PNG, PDF, or SVG with customizable options
+- **Accessibility Features**: Keyboard navigation and screen reader support
+
 ### User Management
 - **Google OAuth Authentication**: Secure login with NextAuth.js
 - **Role-Based Permissions**: Analyst and investor user types
@@ -35,10 +56,12 @@ A comprehensive ChatGPT-like stock analysis platform with AI-powered insights, r
 
 ### Frontend
 - **Framework**: React 18 with TypeScript
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS with Dark Mode Support
+- **3D Graphics**: Three.js with React Three Fiber
+- **Animations**: Framer Motion for smooth transitions
+- **Charts**: D3.js, Chart.js, React-Chartjs-2
 - **UI Components**: Headless UI, Heroicons
-- **Charts**: Recharts
-- **State Management**: React Hooks
+- **State Management**: React Hooks and Context API
 
 ### Development
 - **Language**: TypeScript

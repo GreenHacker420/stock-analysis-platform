@@ -13,9 +13,12 @@ import {
   CogIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Navigation = () => {
   const { data: session } = useSession();
+  const { isDark } = useTheme();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -35,7 +38,11 @@ const Navigation = () => {
   }
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className={`shadow-sm border-b transition-colors duration-200 ${
+      isDark
+        ? 'bg-gray-900 border-gray-700'
+        : 'bg-white border-gray-200'
+    }`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -67,19 +74,26 @@ const Navigation = () => {
           
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
+              <ThemeToggle size="sm" />
+              <span className={`text-sm ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
                 {session.user.name}
               </span>
               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                session.user.role === 'analyst' 
-                  ? 'bg-blue-100 text-blue-800' 
-                  : 'bg-green-100 text-green-800'
+                session.user.role === 'analyst'
+                  ? (isDark ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800')
+                  : (isDark ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800')
               }`}>
                 {session.user.role}
               </span>
               <button
                 onClick={() => signOut()}
-                className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+                className={`text-sm font-medium transition-colors ${
+                  isDark
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
                 Sign out
               </button>
