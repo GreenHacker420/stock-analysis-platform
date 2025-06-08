@@ -1,36 +1,270 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stock Analysis Platform
 
-## Getting Started
+A comprehensive ChatGPT-like stock analysis platform with AI-powered insights, real-time data, and professional portfolio management tools.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Core Functionality
+- **AI-Powered Analysis**: Google Gemini AI integration for intelligent stock recommendations
+- **Real-time Stock Data**: Yahoo Finance API integration for live market data
+- **Portfolio Management**: Comprehensive tracking with performance metrics
+- **Role-Based Access**: Separate interfaces for analysts and investors
+- **Technical Indicators**: RSI, MACD, SMA, EMA calculations
+- **Risk Assessment**: Portfolio diversification and concentration analysis
+
+### User Management
+- **Google OAuth Authentication**: Secure login with NextAuth.js
+- **Role-Based Permissions**: Analyst and investor user types
+- **User-Analyst Relationships**: Many-to-many mapping system
+- **Session Management**: Secure token validation
+
+### Dashboard Features
+- **Investor Dashboard**: Portfolio overview, performance metrics, AI recommendations
+- **Analyst Dashboard**: Multi-investor management, report generation tools
+- **Interactive Charts**: Real-time data visualization
+- **Report History**: Historical analysis tracking
+
+## 🛠 Tech Stack
+
+### Backend
+- **Framework**: Next.js 15 with App Router
+- **Database**: MongoDB Atlas with Mongoose ODM
+- **Authentication**: NextAuth.js with Google OAuth
+- **AI Integration**: Google Gemini API
+- **Stock Data**: Yahoo Finance API
+
+### Frontend
+- **Framework**: React 18 with TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Headless UI, Heroicons
+- **Charts**: Recharts
+- **State Management**: React Hooks
+
+### Development
+- **Language**: TypeScript
+- **Linting**: ESLint
+- **Package Manager**: npm
+- **Environment**: Node.js
+
+## 📋 Prerequisites
+
+Before running this application, make sure you have:
+
+- Node.js 18+ installed
+- MongoDB Atlas account
+- Google Cloud Console project with OAuth credentials
+- Google Gemini API key
+- Alpha Vantage API key (optional)
+
+## 🔧 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd stock-analysis-platform
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+
+   Copy the environment example file:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Update `.env.local` with your credentials:
+   ```env
+   # Database Configuration
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/stock-analysis
+
+   # NextAuth Configuration
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your-nextauth-secret-key
+
+   # Google OAuth Configuration
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+   # Google Gemini AI Configuration
+   GEMINI_API_KEY=your-gemini-api-key
+
+   # Alpha Vantage API (optional)
+   ALPHA_VANTAGE_API_KEY=your-alpha-vantage-api-key
+   ```
+
+4. **Database Setup**
+
+   The application will automatically create the necessary collections and indexes when you first run it.
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🔑 API Keys Setup
+
+### Google OAuth Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials
+5. Add authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
+
+### Google Gemini API Setup
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Copy the key to your environment variables
+
+### MongoDB Atlas Setup
+1. Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Create a new cluster
+3. Create database user
+4. Get connection string
+5. Add your IP to whitelist
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── dashboard/         # Dashboard pages
+│   └── globals.css        # Global styles
+├── components/            # React components
+│   ├── dashboard/         # Dashboard components
+│   ├── layout/           # Layout components
+│   └── providers/        # Context providers
+├── lib/                  # Utility libraries
+│   ├── auth.ts           # NextAuth configuration
+│   ├── geminiAI.ts       # AI integration
+│   ├── mongodb.ts        # Database connection
+│   └── stockData.ts      # Stock data service
+├── models/               # Mongoose models
+│   ├── User.ts           # User model
+│   ├── Portfolio.ts      # Portfolio model
+│   ├── AnalysisReport.ts # Analysis report model
+│   └── UserAnalyst.ts    # User-analyst relationship
+└── types/                # TypeScript type definitions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 Database Schema
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Users Collection
+- User authentication and profile information
+- Role-based access control (analyst/investor)
+- Preferences and settings
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Portfolios Collection
+- Portfolio holdings and performance metrics
+- Real-time value calculations
+- Risk and diversification scores
 
-## Learn More
+### Analysis Reports Collection
+- AI-generated analysis and recommendations
+- Technical indicators and market conditions
+- Historical report tracking
 
-To learn more about Next.js, take a look at the following resources:
+### User-Analyst Relationships Collection
+- Many-to-many mapping between analysts and investors
+- Permission management
+- Communication preferences
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Vercel Deployment (Recommended)
 
-## Deploy on Vercel
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Initial commit"
+   git push origin main
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Deploy to Vercel**
+   - Connect your GitHub repository to Vercel
+   - Add environment variables in Vercel dashboard
+   - Deploy automatically
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Environment Variables for Production
+Make sure to set all environment variables in your production environment:
+- Update `NEXTAUTH_URL` to your production domain
+- Use strong secrets for `NEXTAUTH_SECRET` and `JWT_SECRET`
+- Configure production MongoDB connection string
+
+## 📊 Usage
+
+### For Investors
+1. **Sign in** with Google account
+2. **Create portfolios** and add stock holdings
+3. **Generate AI analysis** for investment recommendations
+4. **View performance** metrics and risk assessment
+5. **Track historical** analysis reports
+
+### For Analysts
+1. **Sign in** with Google account (role assigned by admin)
+2. **Manage multiple** investor portfolios
+3. **Generate comprehensive** analysis reports
+4. **Monitor client** portfolio performance
+5. **Provide investment** recommendations
+
+## 🧪 Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Run tests in watch mode:
+```bash
+npm run test:watch
+```
+
+## 📈 Performance Optimization
+
+- **Caching**: Stock data cached for 5 minutes
+- **Rate Limiting**: API calls limited to prevent abuse
+- **Database Indexing**: Optimized queries with proper indexes
+- **Image Optimization**: Next.js automatic image optimization
+- **Code Splitting**: Automatic code splitting with Next.js
+
+## 🔒 Security Features
+
+- **Authentication**: Secure OAuth with NextAuth.js
+- **Authorization**: Role-based access control
+- **Data Validation**: Input sanitization and validation
+- **Environment Variables**: Secure credential management
+- **HTTPS**: SSL/TLS encryption in production
+- **CORS**: Cross-origin request protection
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support, email support@stockanalysis.com or create an issue in the GitHub repository.
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) for the amazing framework
+- [Google Gemini](https://ai.google.dev/) for AI capabilities
+- [Yahoo Finance](https://finance.yahoo.com/) for stock data
+- [Tailwind CSS](https://tailwindcss.com/) for styling
+- [MongoDB](https://www.mongodb.com/) for database solutions
