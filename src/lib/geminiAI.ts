@@ -56,7 +56,7 @@ export class GeminiAIService {
   private model;
 
   constructor() {
-    this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    this.model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
 
   async generatePortfolioAnalysis(request: AnalysisRequest): Promise<AIAnalysisResult> {
