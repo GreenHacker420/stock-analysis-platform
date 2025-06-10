@@ -1,12 +1,16 @@
 'use client';
 
 import { signIn, getSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 export default function SignIn() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const error = searchParams.get('error');
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   useEffect(() => {
     // Check if user is already signed in
@@ -21,17 +25,18 @@ export default function SignIn() {
     setLoading(true);
     try {
       const result = await signIn('google', {
-        callbackUrl: '/dashboard',
-        redirect: false,
+        callbackUrl,
+        redirect: true, // Let NextAuth handle the redirect
       });
-      
-      if (result?.ok) {
-        router.push('/dashboard');
-      } else if (result?.error) {
+
+      if (result?.error) {
         console.error('Sign in error:', result.error);
+        // Redirect to error page with error details
+        router.push(`/auth/error?error=${result.error}`);
       }
     } catch (error) {
       console.error('Sign in error:', error);
+      router.push('/auth/error?error=Configuration');
     } finally {
       setLoading(false);
     }
@@ -41,6 +46,11 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="mx-auto h-12 w-12">
+            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">SA</span>
+            </div>
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
@@ -48,6 +58,33 @@ export default function SignIn() {
             Access your stock analysis platform
           </p>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Authentication Error
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  {error === 'OAuthAccountNotLinked' && (
+                    <p>This account is already linked to another user. Please try a different account or clear your browser data.</p>
+                  )}
+                  {error === 'AccessDenied' && (
+                    <p>Access was denied. Please try again or contact support.</p>
+                  )}
+                  {error === 'Configuration' && (
+                    <p>There is a configuration issue. Please contact support.</p>
+                  )}
+                  {!['OAuthAccountNotLinked', 'AccessDenied', 'Configuration'].includes(error) && (
+                    <p>An error occurred during sign in. Please try again.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mt-8 space-y-6">
           <div>
             <button

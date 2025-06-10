@@ -8,11 +8,15 @@ import AnalysisReport from '@/models/AnalysisReport';
 import UserAnalyst from '@/models/UserAnalyst';
 import { StockDataService } from '@/lib/stockData';
 import { GeminiAIService } from '@/lib/geminiAI';
+import { withRateLimit, analysisRateLimiter } from '@/lib/rateLimiting';
+import { captureError, captureInfo, addBreadcrumb } from '@/lib/errorTracking';
 
-export async function POST(request: NextRequest) {
+async function handleAnalysisGeneration(request: NextRequest) {
   try {
+    addBreadcrumb('Analysis generation started', 'api', { url: request.url });
+
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -149,12 +153,25 @@ export async function POST(request: NextRequest) {
       .populate('analystId', 'name email')
       .populate('investorId', 'name email');
 
-    return NextResponse.json({ 
+    captureInfo('Analysis generated successfully', {
+      userId: session.user.id,
+      portfolioId,
+      timestamp: new Date(),
+    });
+
+    return NextResponse.json({
       report: populatedReport,
-      message: 'Analysis generated successfully' 
+      message: 'Analysis generated successfully'
     }, { status: 201 });
 
   } catch (error) {
+    captureError(error as Error, {
+      userId: session?.user?.id,
+      portfolioId: body?.portfolioId,
+      action: 'generate_analysis',
+      timestamp: new Date(),
+    });
+
     console.error('Error generating analysis:', error);
     return NextResponse.json(
       { error: 'Failed to generate analysis' },
@@ -162,3 +179,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Apply rate limiting to the handler
+export const POST = withRateLimit(analysisRateLimiter, handleAnalysisGeneration);

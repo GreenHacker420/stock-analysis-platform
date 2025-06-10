@@ -1,30 +1,31 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { MongoDBAdapter } from '@auth/mongodb-adapter';
-import { MongoClient } from 'mongodb';
 import connectDB from './mongodb';
 import User from '@/models/User';
 
-const client = new MongoClient(process.env.MONGODB_URI!);
-const clientPromise = client.connect();
-
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       if (account?.provider === 'google') {
         try {
           await connectDB();
-          
+
           // Check if user exists
           let existingUser = await User.findOne({ email: user.email });
-          
+
           if (!existingUser) {
             // Create new user with default role as investor
             existingUser = await User.create({
@@ -35,15 +36,27 @@ export const authOptions: NextAuthOptions = {
               role: 'investor', // Default role
               isActive: true,
               lastLogin: new Date(),
+              preferences: {
+                riskTolerance: 'medium',
+                investmentGoals: ['growth'],
+                notifications: {
+                  email: true,
+                  push: false,
+                },
+              },
             });
+            console.log('Created new user:', existingUser.email);
           } else {
-            // Update last login
+            // Update last login and Google ID
             await User.findByIdAndUpdate(existingUser._id, {
               lastLogin: new Date(),
               googleId: account.providerAccountId,
+              name: user.name, // Update name in case it changed
+              image: user.image, // Update image in case it changed
             });
+            console.log('Updated existing user:', existingUser.email);
           }
-          
+
           return true;
         } catch (error) {
           console.error('Error during sign in:', error);
@@ -52,19 +65,26 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async session({ session, token }) {
+    async session({ session }) {
       if (session.user?.email) {
         try {
           await connectDB();
           const user = await User.findOne({ email: session.user.email });
-          
+
           if (user) {
             session.user.id = user._id.toString();
             session.user.role = user.role;
             session.user.isActive = user.isActive;
+          } else {
+            // If user not found, set default values
+            session.user.role = 'investor';
+            session.user.isActive = true;
           }
         } catch (error) {
           console.error('Error fetching user in session:', error);
+          // Set default values on error
+          session.user.role = 'investor';
+          session.user.isActive = true;
         }
       }
       return session;
@@ -78,12 +98,22 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
+  events: {
+    async signIn({ user, account }) {
+      console.log('User signed in:', { email: user.email, provider: account?.provider });
+    },
+    async signOut({ session }) {
+      console.log('User signed out:', { email: session?.user?.email });
+    },
+  },
 };
 
 // Type augmentation for NextAuth

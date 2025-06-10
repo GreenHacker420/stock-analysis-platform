@@ -201,11 +201,8 @@ Investment Goals: ${user.preferences.investmentGoals.join(', ')}
   }
 
   private parseAnalysisResponse(text: string, request: AnalysisRequest): AIAnalysisResult {
-    // This is a simplified parser. In a production environment,
-    // you might want to use more sophisticated parsing or structured output
-    
     const sections = this.extractSections(text);
-    
+
     return {
       summary: sections.summary || 'Analysis summary not available',
       detailedAnalysis: sections.detailedAnalysis || 'Detailed analysis not available',
@@ -235,45 +232,217 @@ Investment Goals: ${user.preferences.investmentGoals.join(', ')}
   }
 
   private extractRecommendations(text: string, stockQuotes: StockQuote[]): AIAnalysisResult['recommendations'] {
-    // Simplified recommendation extraction
-    // In production, you'd want more sophisticated parsing
-    return stockQuotes.map(quote => ({
-      symbol: quote.symbol,
-      companyName: quote.companyName,
-      action: 'hold' as const,
-      confidence: 75,
-      targetPrice: quote.price * 1.1,
-      currentPrice: quote.price,
-      reasoning: 'Based on current market conditions and technical analysis',
-      riskLevel: 'medium' as const,
-      timeHorizon: 'medium' as const,
-    }));
+    const recommendations: AIAnalysisResult['recommendations'] = [];
+
+    for (const quote of stockQuotes) {
+      // Extract recommendation for each stock from the AI response
+      const stockSection = this.extractStockSection(text, quote.symbol);
+
+      const action = this.extractAction(stockSection) || 'hold';
+      const confidence = this.extractConfidence(stockSection) || 75;
+      const reasoning = this.extractReasoning(stockSection) || 'Based on current market conditions and technical analysis';
+      const riskLevel = this.extractRiskLevel(stockSection) || 'medium';
+      const timeHorizon = this.extractTimeHorizon(stockSection) || 'medium';
+
+      recommendations.push({
+        symbol: quote.symbol,
+        companyName: quote.companyName,
+        action: action as 'buy' | 'sell' | 'hold',
+        confidence,
+        targetPrice: this.calculateTargetPrice(quote.price, action),
+        currentPrice: quote.price,
+        reasoning,
+        riskLevel: riskLevel as 'low' | 'medium' | 'high',
+        timeHorizon: timeHorizon as 'short' | 'medium' | 'long',
+      });
+    }
+
+    return recommendations;
   }
 
   private extractRiskAssessment(text: string): AIAnalysisResult['riskAssessment'] {
+    const riskSection = this.extractSectionContent(text, 'RISK ASSESSMENT');
+
+    const overallRisk = this.extractRiskFromText(riskSection, 'overall') || 'medium';
+    const diversificationRisk = this.extractNumericValue(riskSection, 'diversification') || 60;
+    const concentrationRisk = this.extractNumericValue(riskSection, 'concentration') || 40;
+    const marketRisk = this.extractNumericValue(riskSection, 'market') || 50;
+    const recommendations = this.extractRiskRecommendations(riskSection);
+
     return {
-      overallRisk: 'medium',
-      diversificationRisk: 60,
-      concentrationRisk: 40,
-      marketRisk: 50,
-      recommendations: ['Consider diversifying across sectors', 'Monitor position sizes'],
+      overallRisk: overallRisk as 'low' | 'medium' | 'high',
+      diversificationRisk,
+      concentrationRisk,
+      marketRisk,
+      recommendations,
     };
   }
 
   private extractMarketConditions(text: string): AIAnalysisResult['marketConditions'] {
+    const marketSection = this.extractSectionContent(text, 'MARKET CONDITIONS');
+
+    const overall = this.extractMarketSentiment(marketSection, 'overall') || 'neutral';
+    const volatility = this.extractMarketSentiment(marketSection, 'volatility') || 'medium';
+    const trend = this.extractMarketTrend(marketSection) || 'sideways';
+    const sentiment = this.extractSentimentDescription(marketSection) || 'Mixed market sentiment with cautious optimism';
+
     return {
-      overall: 'neutral',
-      volatility: 'medium',
-      trend: 'sideways',
-      sentiment: 'Mixed market sentiment with cautious optimism',
+      overall: overall as 'bullish' | 'bearish' | 'neutral',
+      volatility: volatility as 'low' | 'medium' | 'high',
+      trend: trend as 'upward' | 'downward' | 'sideways',
+      sentiment,
     };
   }
 
   private extractPerformanceAnalysis(text: string): AIAnalysisResult['performanceAnalysis'] {
+    const performanceSection = this.extractSectionContent(text, 'PERFORMANCE ANALYSIS');
+
     return {
-      returnAnalysis: 'Portfolio showing moderate performance relative to investment timeline',
-      benchmarkComparison: 'Performance in line with major market indices',
-      riskAdjustedReturns: 'Risk-adjusted returns are acceptable given current market conditions',
+      returnAnalysis: this.extractSubsection(performanceSection, 'return') || 'Portfolio showing moderate performance relative to investment timeline',
+      benchmarkComparison: this.extractSubsection(performanceSection, 'benchmark') || 'Performance in line with major market indices',
+      riskAdjustedReturns: this.extractSubsection(performanceSection, 'risk-adjusted') || 'Risk-adjusted returns are acceptable given current market conditions',
     };
+  }
+
+  // Helper methods for improved AI response parsing
+  private extractStockSection(text: string, symbol: string): string {
+    const regex = new RegExp(`${symbol}[:\\s-]([^\\n]*(?:\\n(?!\\w+:)[^\\n]*)*)`, 'i');
+    const match = text.match(regex);
+    return match ? match[1] : '';
+  }
+
+  private extractAction(stockSection: string): string | null {
+    const buyPattern = /\b(buy|purchase|acquire)\b/i;
+    const sellPattern = /\b(sell|dispose|exit)\b/i;
+    const holdPattern = /\b(hold|maintain|keep)\b/i;
+
+    if (buyPattern.test(stockSection)) return 'buy';
+    if (sellPattern.test(stockSection)) return 'sell';
+    if (holdPattern.test(stockSection)) return 'hold';
+
+    return null;
+  }
+
+  private extractConfidence(stockSection: string): number | null {
+    const confidencePattern = /confidence[:\s]*(\d+)%?/i;
+    const match = stockSection.match(confidencePattern);
+    return match ? parseInt(match[1]) : null;
+  }
+
+  private extractReasoning(stockSection: string): string | null {
+    const reasoningPattern = /(?:reason|rationale|because)[:\s]*([^.]+)/i;
+    const match = stockSection.match(reasoningPattern);
+    return match ? match[1].trim() : null;
+  }
+
+  private extractRiskLevel(stockSection: string): string | null {
+    const lowRiskPattern = /\b(low|minimal|conservative)\s+risk\b/i;
+    const highRiskPattern = /\b(high|significant|aggressive)\s+risk\b/i;
+    const mediumRiskPattern = /\b(medium|moderate|balanced)\s+risk\b/i;
+
+    if (lowRiskPattern.test(stockSection)) return 'low';
+    if (highRiskPattern.test(stockSection)) return 'high';
+    if (mediumRiskPattern.test(stockSection)) return 'medium';
+
+    return null;
+  }
+
+  private extractTimeHorizon(stockSection: string): string | null {
+    const shortPattern = /\b(short|immediate|near)[\s-]?term\b/i;
+    const longPattern = /\b(long|extended)[\s-]?term\b/i;
+    const mediumPattern = /\b(medium|mid)[\s-]?term\b/i;
+
+    if (shortPattern.test(stockSection)) return 'short';
+    if (longPattern.test(stockSection)) return 'long';
+    if (mediumPattern.test(stockSection)) return 'medium';
+
+    return null;
+  }
+
+  private calculateTargetPrice(currentPrice: number, action: string): number {
+    switch (action) {
+      case 'buy':
+        return currentPrice * 1.15; // 15% upside target
+      case 'sell':
+        return currentPrice * 0.95; // 5% downside protection
+      default:
+        return currentPrice * 1.05; // 5% modest upside for hold
+    }
+  }
+
+  private extractSectionContent(text: string, sectionName: string): string {
+    const regex = new RegExp(`${sectionName}:?\\s*([\\s\\S]*?)(?=\\n[A-Z][A-Z\\s]+:|$)`, 'i');
+    const match = text.match(regex);
+    return match ? match[1].trim() : '';
+  }
+
+  private extractSubsection(content: string, keyword: string): string | null {
+    const regex = new RegExp(`[^.]*${keyword}[^.]*\\.`, 'i');
+    const match = content.match(regex);
+    return match ? match[0].trim() : null;
+  }
+
+  private extractRiskFromText(text: string, riskType: string): string | null {
+    const lowPattern = new RegExp(`${riskType}[^.]*\\b(low|minimal|conservative)\\b`, 'i');
+    const highPattern = new RegExp(`${riskType}[^.]*\\b(high|significant|aggressive)\\b`, 'i');
+    const mediumPattern = new RegExp(`${riskType}[^.]*\\b(medium|moderate|balanced)\\b`, 'i');
+
+    if (lowPattern.test(text)) return 'low';
+    if (highPattern.test(text)) return 'high';
+    if (mediumPattern.test(text)) return 'medium';
+
+    return null;
+  }
+
+  private extractNumericValue(text: string, keyword: string): number | null {
+    const regex = new RegExp(`${keyword}[^\\d]*(\\d+)`, 'i');
+    const match = text.match(regex);
+    return match ? parseInt(match[1]) : null;
+  }
+
+  private extractRiskRecommendations(text: string): string[] {
+    const recommendations: string[] = [];
+    const lines = text.split('\n');
+
+    for (const line of lines) {
+      if (line.match(/^[-•*]\s*/) || line.toLowerCase().includes('recommend')) {
+        const cleaned = line.replace(/^[-•*]\s*/, '').trim();
+        if (cleaned.length > 10) {
+          recommendations.push(cleaned);
+        }
+      }
+    }
+
+    return recommendations.length > 0 ? recommendations : ['Consider diversifying across sectors', 'Monitor position sizes'];
+  }
+
+  private extractMarketSentiment(text: string, type: string): string | null {
+    if (type === 'overall') {
+      if (/\b(bullish|positive|optimistic|upward)\b/i.test(text)) return 'bullish';
+      if (/\b(bearish|negative|pessimistic|downward)\b/i.test(text)) return 'bearish';
+      return 'neutral';
+    }
+
+    if (type === 'volatility') {
+      if (/\b(low|stable|calm)\s+volatility\b/i.test(text)) return 'low';
+      if (/\b(high|extreme|elevated)\s+volatility\b/i.test(text)) return 'high';
+      return 'medium';
+    }
+
+    return null;
+  }
+
+  private extractMarketTrend(text: string): string | null {
+    if (/\b(upward|rising|ascending|bullish)\s+trend\b/i.test(text)) return 'upward';
+    if (/\b(downward|falling|descending|bearish)\s+trend\b/i.test(text)) return 'downward';
+    if (/\b(sideways|lateral|flat|consolidating)\s+trend\b/i.test(text)) return 'sideways';
+
+    return null;
+  }
+
+  private extractSentimentDescription(text: string): string | null {
+    const sentimentPattern = /sentiment[:\s]*([^.]+)/i;
+    const match = text.match(sentimentPattern);
+    return match ? match[1].trim() : null;
   }
 }

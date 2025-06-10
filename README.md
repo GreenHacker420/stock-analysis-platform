@@ -238,35 +238,138 @@ Make sure to set all environment variables in your production environment:
 3. **Generate comprehensive** analysis reports
 4. **Monitor client** portfolio performance
 5. **Provide investment** recommendations
+6. **Real-time monitoring** of all assigned portfolios
+7. **Instant notifications** when analysis completes
+
+## 🔄 Real-time Features
+
+### WebSocket Integration
+The platform includes comprehensive real-time functionality:
+
+- **Live Stock Updates**: Real-time price feeds for all portfolio holdings
+- **Portfolio Monitoring**: Instant portfolio value updates
+- **Analysis Notifications**: Real-time alerts when AI analysis completes
+- **Market Alerts**: Breaking news and volatility warnings
+- **Multi-user Sync**: Synchronized data across multiple sessions
+
+### Usage Example
+```typescript
+import { useStockUpdates, usePortfolioUpdates } from '@/hooks/useWebSocket'
+
+function Portfolio({ portfolioId, symbols }) {
+  const { stockUpdates, loading, error } = useStockUpdates(symbols)
+  const { portfolioUpdate } = usePortfolioUpdates(portfolioId)
+
+  // Real-time updates via polling automatically reflected in UI
+  return <PortfolioDisplay data={portfolioUpdate} stocks={stockUpdates} />
+}
+```
+
+### Server Setup
+The platform uses Next.js with intelligent polling for real-time features:
+- **Main Server** (Port 3000): Next.js application with API routes
+- **Real-time Updates**: Polling-based updates every 30 seconds
+- **API Endpoints**: RESTful APIs for all data operations
+
+Start the development server:
+```bash
+npm run dev  # Starts Next.js with real-time polling
+```
 
 ## 🧪 Testing
 
-Run the test suite:
+The platform includes comprehensive testing infrastructure with Jest and React Testing Library.
+
+### Running Tests
+
+Run the complete test suite:
 ```bash
 npm test
 ```
 
-Run tests in watch mode:
+Run tests in watch mode during development:
 ```bash
 npm run test:watch
 ```
 
+Generate coverage reports:
+```bash
+npm run test:coverage
+```
+
+### Test Structure
+
+- **Unit Tests**: Individual component and service testing
+- **Integration Tests**: API endpoint and database testing
+- **Component Tests**: React component rendering and interaction
+- **Service Tests**: Business logic and external API integration
+
+### Test Files
+
+```
+src/
+├── lib/__tests__/
+│   ├── stockData.test.ts      # Stock data service tests
+│   ├── geminiAI.test.ts       # AI service tests
+│   ├── rateLimiting.test.ts   # Rate limiting tests
+│   └── performance.test.ts    # Performance monitoring tests
+├── app/api/__tests__/
+│   └── portfolios.test.ts     # API endpoint tests
+└── components/__tests__/
+    └── DashboardOverview.test.tsx # Component tests
+```
+
 ## 📈 Performance Optimization
 
-- **Caching**: Stock data cached for 5 minutes
-- **Rate Limiting**: API calls limited to prevent abuse
-- **Database Indexing**: Optimized queries with proper indexes
-- **Image Optimization**: Next.js automatic image optimization
-- **Code Splitting**: Automatic code splitting with Next.js
+### Caching Strategy
+- **Stock Data**: 5-minute cache for real-time quotes
+- **Technical Indicators**: Cached calculations to reduce computation
+- **API Responses**: Intelligent caching based on data volatility
+- **Database Queries**: Optimized with proper indexing
+
+### Rate Limiting
+- **API Protection**: Multiple rate limiters for different endpoints
+- **User-Based Limits**: Different limits for analysts vs investors
+- **Intelligent Throttling**: Adaptive limits based on usage patterns
+- **DDoS Protection**: Automatic IP blocking for abuse
+
+### Real-time Features
+- **WebSocket Integration**: Live stock price updates
+- **Portfolio Monitoring**: Real-time portfolio value changes
+- **Analysis Notifications**: Instant alerts when reports complete
+- **Market Alerts**: Breaking news and volatility warnings
+
+### Performance Monitoring
+- **Metrics Collection**: Comprehensive performance tracking
+- **API Monitoring**: Response time and error rate tracking
+- **Error Tracking**: Automatic error reporting and analysis
+- **System Health**: Memory usage and uptime monitoring
 
 ## 🔒 Security Features
 
-- **Authentication**: Secure OAuth with NextAuth.js
-- **Authorization**: Role-based access control
-- **Data Validation**: Input sanitization and validation
-- **Environment Variables**: Secure credential management
-- **HTTPS**: SSL/TLS encryption in production
-- **CORS**: Cross-origin request protection
+### Authentication & Authorization
+- **OAuth Integration**: Secure Google OAuth with NextAuth.js
+- **Role-Based Access**: Granular permissions for analysts and investors
+- **Session Management**: JWT tokens with automatic expiration
+- **Multi-Factor Support**: Ready for 2FA implementation
+
+### Data Protection
+- **Input Validation**: Comprehensive data sanitization
+- **SQL Injection Prevention**: Parameterized queries and ORM protection
+- **XSS Protection**: Content Security Policy and input encoding
+- **CSRF Protection**: Token-based request validation
+
+### Infrastructure Security
+- **Rate Limiting**: Advanced DDoS and abuse protection
+- **Environment Isolation**: Secure credential management
+- **HTTPS Enforcement**: SSL/TLS encryption in production
+- **CORS Configuration**: Controlled cross-origin access
+
+### Monitoring & Compliance
+- **Error Tracking**: Comprehensive error logging and alerting
+- **Audit Trails**: Complete user action logging
+- **Data Encryption**: At-rest and in-transit encryption
+- **Privacy Controls**: GDPR-compliant data handling
 
 ## 🤝 Contributing
 
