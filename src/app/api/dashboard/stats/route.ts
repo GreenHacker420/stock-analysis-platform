@@ -9,30 +9,27 @@ import { mockPortfolios } from '@/data/mockPortfolios';
 import { mockAnalysisReports } from '@/data/mockReports';
 import { mockUsers } from '@/data/mockUsers';
 
-// Helper function to ensure database is seeded
-async function ensureDatabaseSeeded() {
+// Helper function to check database status
+async function checkDatabaseStatus() {
   try {
     const userCount = await User.countDocuments();
     const portfolioCount = await Portfolio.countDocuments();
     const reportCount = await AnalysisReport.countDocuments();
 
-    if (userCount === 0 || portfolioCount === 0 || reportCount === 0) {
-      console.log('Dashboard stats: Database appears empty, triggering seeding...');
-
-      // Trigger seeding by calling the seed endpoint internally
-      const seedResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/admin/seed-data`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (seedResponse.ok) {
-        console.log('Dashboard stats: Database seeding completed');
-      } else {
-        console.warn('Dashboard stats: Seeding failed, will use fallback data');
-      }
-    }
+    return {
+      hasUsers: userCount > 0,
+      hasPortfolios: portfolioCount > 0,
+      hasReports: reportCount > 0,
+      hasData: userCount > 0 && portfolioCount > 0 && reportCount > 0
+    };
   } catch (error) {
-    console.error('Dashboard stats: Error during seeding check:', error);
+    console.error('Dashboard stats: Error checking database status:', error);
+    return {
+      hasUsers: false,
+      hasPortfolios: false,
+      hasReports: false,
+      hasData: false
+    };
   }
 }
 
@@ -46,12 +43,14 @@ export async function GET() {
 
     await connectDB();
 
-    // Ensure database is seeded
-    await ensureDatabaseSeeded();
+    // Check database status
+    const dbStatus = await checkDatabaseStatus();
 
     let stats;
 
-    try {
+    // Try to get data from database if it has data
+    if (dbStatus.hasData) {
+      try {
       if (session.user.role === 'investor') {
         // For demo purposes, calculate stats from all portfolios
         const portfolios = await Portfolio.find({ isActive: true });
@@ -107,12 +106,19 @@ export async function GET() {
           assignedInvestorsCount: totalInvestors,
         };
 
-      } else {
-        return NextResponse.json({ error: 'Invalid user role' }, { status: 403 });
-      }
+        } else {
+          return NextResponse.json({ error: 'Invalid user role' }, { status: 403 });
+        }
 
-    } catch (dbError) {
-      console.error('Database error, falling back to mock data:', dbError);
+      } catch (dbError) {
+        console.error('Database error, falling back to mock data:', dbError);
+        stats = null; // Will trigger fallback below
+      }
+    }
+
+    // Fallback to mock data if database query failed or no data
+    if (!stats) {
+      console.log('Using mock data for dashboard stats...');
 
       // Fallback to mock data calculations
       const totalPortfolioValue = mockPortfolios.reduce((sum, portfolio) => sum + portfolio.totalValue, 0);
@@ -135,7 +141,7 @@ export async function GET() {
         portfolioCount: mockPortfolios.length,
         recentReportsCount,
         assignedInvestorsCount: mockUsers.filter(u => u.role === 'investor').length,
-        fallback: true
+        source: 'mock_data'
       };
     }
 

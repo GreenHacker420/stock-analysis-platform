@@ -7,95 +7,24 @@ import User from '@/models/User';
 import { mockPortfolios } from '@/data/mockPortfolios';
 import { mockUsers } from '@/data/mockUsers';
 
-// Helper function to check if database needs seeding for portfolios
-async function checkAndSeedPortfolios() {
+// Helper function to check if database has portfolios
+async function checkPortfolioStatus() {
   try {
     const portfolioCount = await Portfolio.countDocuments();
     const userCount = await User.countDocuments();
 
-    // If database is empty, trigger seeding
-    if (portfolioCount === 0 || userCount === 0) {
-      console.log('Portfolio database appears empty, triggering automatic seeding...');
-
-      // Seed users first if needed
-      if (userCount === 0) {
-        for (const mockUser of mockUsers) {
-          const existingUser = await User.findOne({ email: mockUser.email });
-          if (!existingUser) {
-            const userData = {
-              email: mockUser.email,
-              name: mockUser.name,
-              image: mockUser.image,
-              role: mockUser.role,
-              isActive: mockUser.isActive,
-              lastLogin: mockUser.lastLogin ? new Date(mockUser.lastLogin) : new Date(),
-              preferences: mockUser.preferences,
-            };
-            const user = new User(userData);
-            await user.save();
-          }
-        }
-      }
-
-      // Seed portfolios
-      if (portfolioCount === 0) {
-        for (const mockPortfolio of mockPortfolios) {
-          const existingPortfolio = await Portfolio.findOne({ name: mockPortfolio.name });
-          if (!existingPortfolio) {
-            const mockInvestor = mockUsers.find(u => u.id === mockPortfolio.investorId);
-            const investor = await User.findOne({ email: mockInvestor?.email });
-
-            if (investor) {
-              // Transform holdings to match database schema
-              const transformedHoldings = mockPortfolio.holdings.map((holding: any) => ({
-                symbol: holding.symbol,
-                companyName: holding.companyName,
-                shares: holding.quantity, // quantity → shares
-                averageCost: holding.averagePrice, // averagePrice → averageCost
-                currentPrice: holding.currentPrice,
-                marketValue: holding.totalValue, // totalValue → marketValue
-                gainLoss: holding.gainLoss,
-                gainLossPercentage: holding.gainLossPercentage,
-                lastUpdated: holding.lastUpdated || new Date()
-              }));
-
-              const portfolioData = {
-                name: mockPortfolio.name,
-                description: mockPortfolio.description,
-                totalValue: mockPortfolio.totalValue,
-                totalCost: mockPortfolio.totalCost,
-                totalGainLoss: mockPortfolio.totalGainLoss,
-                totalGainLossPercentage: mockPortfolio.totalGainLossPercentage,
-                holdings: transformedHoldings,
-                cash: mockPortfolio.cash,
-                isActive: mockPortfolio.isActive,
-                lastAnalyzed: mockPortfolio.lastAnalyzed ? new Date(mockPortfolio.lastAnalyzed) : undefined,
-                riskScore: mockPortfolio.riskScore,
-                diversificationScore: 50, // Default value
-                performanceMetrics: {
-                  dailyReturn: 0,
-                  weeklyReturn: 0,
-                  monthlyReturn: 0,
-                  yearlyReturn: 0,
-                  volatility: 0,
-                  sharpeRatio: 0
-                },
-                investorId: investor._id,
-              };
-              const portfolio = new Portfolio(portfolioData);
-              await portfolio.save();
-            }
-          }
-        }
-      }
-
-      console.log('Portfolio automatic seeding completed');
-      return true;
-    }
-    return false;
+    return {
+      hasUsers: userCount > 0,
+      hasPortfolios: portfolioCount > 0,
+      isEmpty: portfolioCount === 0 && userCount === 0
+    };
   } catch (error) {
-    console.error('Error during portfolio automatic seeding:', error);
-    return false;
+    console.error('Error checking portfolio database status:', error);
+    return {
+      hasUsers: false,
+      hasPortfolios: false,
+      isEmpty: true
+    };
   }
 }
 
@@ -109,91 +38,79 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    // Check and seed database if needed
-    await checkAndSeedPortfolios();
+    // Check if database has portfolios
+    const dbStatus = await checkPortfolioStatus();
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = parseInt(searchParams.get('skip') || '0');
 
-    let portfolios;
+    // If database has portfolios, try to fetch from database
+    if (dbStatus.hasPortfolios) {
+      try {
+        const portfolios = await Portfolio.find({
+          isActive: true
+        })
+        .populate('investorId', 'name email')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip);
 
-    if (session.user.role === 'investor') {
-      // For demo purposes, show all portfolios (in production, filter by investorId)
-      portfolios = await Portfolio.find({
-        isActive: true
-      })
-      .populate('investorId', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip(skip);
-    } else if (session.user.role === 'analyst') {
-      // For demo purposes, show all portfolios (in production, filter by assigned investors)
-      portfolios = await Portfolio.find({
-        isActive: true
-      })
-      .populate('investorId', 'name email')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip(skip);
-    } else {
-      return NextResponse.json({ error: 'Invalid user role' }, { status: 403 });
+        const total = await Portfolio.countDocuments({ isActive: true });
+
+        return NextResponse.json({
+          success: true,
+          portfolios,
+          source: 'database',
+          pagination: {
+            total,
+            limit,
+            skip,
+            hasMore: skip + limit < total
+          }
+        });
+      } catch (dbError) {
+        console.error('Database query failed, falling back to mock data:', dbError);
+      }
     }
 
-    const total = await Portfolio.countDocuments({ isActive: true });
+    // Fallback to mock data
+    console.log('Using mock portfolio data...');
+
+    // Add user names to mock portfolios
+    const portfoliosWithDetails = mockPortfolios.map(portfolio => {
+      const investor = mockUsers.find(u => u.id === portfolio.investorId);
+
+      return {
+        ...portfolio,
+        _id: portfolio.id,
+        investorId: {
+          _id: portfolio.investorId,
+          name: investor?.name || 'Unknown',
+          email: investor?.email || ''
+        }
+      };
+    });
 
     return NextResponse.json({
       success: true,
-      portfolios,
+      portfolios: portfoliosWithDetails,
+      source: 'mock_data',
       pagination: {
-        total,
-        limit,
-        skip,
-        hasMore: skip + limit < total
+        total: portfoliosWithDetails.length,
+        limit: 50,
+        skip: 0,
+        hasMore: false
       }
     });
+
   } catch (error) {
-    console.error('Error fetching portfolios:', error);
-
-    // Fallback to mock data if database fails
-    console.log('Falling back to mock portfolio data...');
-
-    try {
-      // Add user names to mock portfolios
-      const portfoliosWithDetails = mockPortfolios.map(portfolio => {
-        const investor = mockUsers.find(u => u.id === portfolio.investorId);
-
-        return {
-          ...portfolio,
-          _id: portfolio.id,
-          investorId: {
-            _id: portfolio.investorId,
-            name: investor?.name || 'Unknown',
-            email: investor?.email || ''
-          }
-        };
-      });
-
-      return NextResponse.json({
-        success: true,
-        portfolios: portfoliosWithDetails,
-        fallback: true,
-        pagination: {
-          total: portfoliosWithDetails.length,
-          limit: 50,
-          skip: 0,
-          hasMore: false
-        }
-      });
-
-    } catch (fallbackError) {
-      console.error('Fallback to mock portfolio data also failed:', fallbackError);
-      return NextResponse.json(
-        { error: 'Failed to fetch portfolios and fallback failed' },
-        { status: 500 }
-      );
-    }
+    console.error('Error in portfolios API:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch portfolios' },
+      { status: 500 }
+    );
   }
 }
 
