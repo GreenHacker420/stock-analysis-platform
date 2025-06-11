@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { AlertCircle, Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +26,31 @@ function SignInContent() {
 
   const error = searchParams.get('error');
   const message = searchParams.get('message');
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const rawCallbackUrl = searchParams.get('callbackUrl');
+
+  // Ensure callback URL is always a valid production URL
+  const callbackUrl = (() => {
+    if (!rawCallbackUrl) return '/dashboard';
+
+    try {
+      // If it's a relative URL, use it as-is
+      if (rawCallbackUrl.startsWith('/')) {
+        return rawCallbackUrl;
+      }
+
+      // If it's an absolute URL, validate it's from our domain
+      const url = new URL(rawCallbackUrl);
+      if (url.hostname === 'stock.greenhacker.tech' || url.hostname === 'localhost') {
+        return url.pathname + url.search;
+      }
+
+      // Default to dashboard for any other domain
+      return '/dashboard';
+    } catch {
+      // If URL parsing fails, default to dashboard
+      return '/dashboard';
+    }
+  })();
 
   useEffect(() => {
     // Check if user is already signed in
@@ -240,6 +266,48 @@ function SignInContent() {
               {formErrors.password && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.password}</p>
               )}
+            </div>
+
+            {/* Demo Credentials */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Demo Credentials
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div className="bg-white dark:bg-gray-800 rounded p-3 border border-blue-200 dark:border-blue-700">
+                  <div className="font-medium text-blue-700 dark:text-blue-300 mb-2">👨‍💼 Analyst Account</div>
+                  <div className="space-y-1 text-gray-600 dark:text-gray-400">
+                    <div><span className="font-medium">Email:</span> sarah.johnson@stockanalyzer.com</div>
+                    <div><span className="font-medium">Password:</span> analyst123!</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ email: 'sarah.johnson@stockanalyzer.com', password: 'analyst123!' });
+                    }}
+                    className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium"
+                  >
+                    Use these credentials
+                  </button>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded p-3 border border-blue-200 dark:border-blue-700">
+                  <div className="font-medium text-green-700 dark:text-green-300 mb-2">👤 Investor Account</div>
+                  <div className="space-y-1 text-gray-600 dark:text-gray-400">
+                    <div><span className="font-medium">Email:</span> john.doe@email.com</div>
+                    <div><span className="font-medium">Password:</span> investor123!</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ email: 'john.doe@email.com', password: 'investor123!' });
+                    }}
+                    className="mt-2 text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 font-medium"
+                  >
+                    Use these credentials
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Sign In Button */}

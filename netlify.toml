@@ -1,11 +1,12 @@
 [build]
-  command = "npm ci && npm run build"
+  command = "npm install && npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_ENV = "production"
   NEXT_TELEMETRY_DISABLED = "1"
   NEXTAUTH_URL = "https://stock.greenhacker.tech"
+  NEXTAUTH_SECRET = "stock-analysis-platform-secret-2024-production-key"
   NODE_VERSION = "18"
 
 [[plugins]]

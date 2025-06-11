@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 
 export async function GET(request: NextRequest) {
-  // Only allow in development
-  if (process.env.NODE_ENV !== 'development') {
-    return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
-  }
+  // Allow in production for debugging authentication issues
+  // In a real production app, you might want to add authentication here
 
   try {
     const config = {
@@ -16,6 +14,11 @@ export async function GET(request: NextRequest) {
       googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Missing',
       mongodbUri: process.env.MONGODB_URI ? 'Set' : 'Missing',
       geminiApiKey: process.env.GEMINI_API_KEY ? 'Set' : 'Missing',
+      // Additional debug info
+      host: request.headers.get('host'),
+      userAgent: request.headers.get('user-agent'),
+      origin: request.headers.get('origin'),
+      referer: request.headers.get('referer'),
     }
 
     // Test database connection
