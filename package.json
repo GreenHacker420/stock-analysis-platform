@@ -11,7 +11,17 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "seed:users": "tsx src/scripts/seedUsers.ts",
+    "seed:users:dev": "tsx --env-file=.env src/scripts/seedUsers.ts",
+    "seed:users:js": "node src/scripts/seedUsers.js",
+    "db:seed": "node src/scripts/seedUsersSimple.js seed",
+    "db:clear": "node src/scripts/seedUsersSimple.js clear",
+    "db:verify": "npm run seed:users:dev verify",
+    "db:demo": "npm run seed:users:js demo",
+    "db:demo:full": "npm run seed:users:dev demo",
+    "db:simulate": "npm run seed:users:js simulate",
+    "db:test": "node src/scripts/testAuth.js"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.9.1",
@@ -27,6 +37,7 @@
     "chart.js": "^4.4.9",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
+    "dotenv": "^16.5.0",
     "express-rate-limit": "^7.5.0",
     "framer-motion": "^12.16.0",
     "html2canvas": "^1.4.1",
@@ -70,6 +81,7 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.0",
     "typescript": "^5"
   }
 }

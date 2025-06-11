@@ -442,12 +442,12 @@ export default function CandlestickChart({
           {isZoomed && (
             <button
               onClick={() => {
-                const svg = d3.select(svgRef.current);
-                svg.transition().duration(300).call(
-                  d3.zoom<SVGSVGElement, unknown>().transform,
-                  d3.zoomIdentity
-                );
-                setIsZoomed(false);
+                if (svgRef.current) {
+                  const svg = d3.select(svgRef.current);
+                  const zoom = d3.zoom<SVGSVGElement, unknown>();
+                  (svg as any).call(zoom.transform, d3.zoomIdentity);
+                  setIsZoomed(false);
+                }
               }}
               className={`absolute top-4 right-4 px-3 py-1 text-xs font-medium rounded ${
                 isDark

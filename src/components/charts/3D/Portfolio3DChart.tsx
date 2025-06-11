@@ -5,6 +5,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Text, Html } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/contexts/ThemeContext';
+import { formatINR } from '@/lib/currencyUtils';
 import * as THREE from 'three';
 
 interface PortfolioData {
@@ -112,7 +113,7 @@ function DonutSegment({
           } border backdrop-blur-sm`}>
             <div className="text-sm font-semibold">{data.symbol}</div>
             <div className="text-xs text-gray-500">{data.name}</div>
-            <div className="text-sm">${data.value.toLocaleString()}</div>
+            <div className="text-sm">{formatINR(data.value, { compact: true })}</div>
             <div className="text-xs">{data.percentage.toFixed(1)}%</div>
           </div>
         </Html>
@@ -198,7 +199,7 @@ export default function Portfolio3DChart({ data, totalValue, className = '' }: P
           <p className={`text-sm ${
             isDark ? 'text-gray-300' : 'text-gray-600'
           }`}>
-            Total Value: ${totalValue.toLocaleString()}
+            Total Value: {formatINR(totalValue, { compact: true })}
           </p>
         </div>
         

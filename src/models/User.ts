@@ -7,6 +7,7 @@ export interface IUser extends Document {
   image?: string;
   role: 'analyst' | 'investor';
   googleId?: string;
+  password?: string;
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean;
@@ -45,7 +46,12 @@ const UserSchema = new Schema<IUser>({
   },
   googleId: {
     type: String,
-    sparse: true,
+    default: null,
+  },
+  password: {
+    type: String,
+    default: null,
+    select: false, // Don't include password in queries by default
   },
   isActive: {
     type: Boolean,

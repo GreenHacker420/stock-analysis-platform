@@ -1,5 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 import connectDB from './mongodb';
 import User from '@/models/User';
 
@@ -13,6 +15,76 @@ export const authOptions: NextAuthOptions = {
           prompt: "consent",
           access_type: "offline",
           response_type: "code"
+        }
+      }
+    }),
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: {
+          label: 'Email',
+          type: 'email',
+          placeholder: 'your-email@example.com'
+        },
+        password: {
+          label: 'Password',
+          type: 'password',
+          placeholder: 'Your password'
+        }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email and password are required');
+        }
+
+        try {
+          await connectDB();
+
+          // Find user by email
+          const user = await User.findOne({
+            email: credentials.email.toLowerCase()
+          }).select('+password');
+
+          if (!user) {
+            throw new Error('No user found with this email');
+          }
+
+          // Check if user has a password (might be Google-only user)
+          if (!user.password) {
+            throw new Error('Please sign in with Google or reset your password');
+          }
+
+          // Verify password
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            throw new Error('Invalid password');
+          }
+
+          // Check if user is active
+          if (!user.isActive) {
+            throw new Error('Account is deactivated. Please contact support.');
+          }
+
+          // Update last login
+          await User.findByIdAndUpdate(user._id, {
+            lastLogin: new Date(),
+          });
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+            isActive: user.isActive,
+          };
+        } catch (error) {
+          console.error('Authentication error:', error);
+          throw new Error(error instanceof Error ? error.message : 'Authentication failed');
         }
       }
     }),
@@ -62,6 +134,10 @@ export const authOptions: NextAuthOptions = {
           console.error('Error during sign in:', error);
           return false;
         }
+      } else if (account?.provider === 'credentials') {
+        // Credentials provider handles authentication in authorize function
+        // If we reach here, authentication was successful
+        return true;
       }
       return true;
     },

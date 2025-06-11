@@ -3,9 +3,10 @@
 import { useSession } from 'next-auth/react';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { formatINR, formatPercentage } from '@/lib/currencyUtils';
 import {
   ChartBarIcon,
-  CurrencyDollarIcon,
+  CurrencyRupeeIcon,
   ArrowTrendingUpIcon as TrendingUpIcon,
   ArrowTrendingDownIcon as TrendingDownIcon,
   UserGroupIcon,
@@ -158,20 +159,20 @@ const DashboardOverview = () => {
   const statCards = [
     {
       name: 'Total Portfolio Value',
-      value: stats ? `$${stats.totalPortfolioValue.toLocaleString()}` : '$0',
-      icon: CurrencyDollarIcon,
+      value: stats ? formatINR(stats.totalPortfolioValue, { compact: true }) : formatINR(0),
+      icon: CurrencyRupeeIcon,
       color: 'text-blue-600',
       bgColor: isDark ? 'bg-blue-900/50' : 'bg-blue-100',
     },
     {
       name: 'Total Gain/Loss',
-      value: stats ? `$${stats.totalGainLoss.toLocaleString()}` : '$0',
+      value: stats ? formatINR(stats.totalGainLoss, { compact: true }) : formatINR(0),
       icon: stats && stats.totalGainLoss >= 0 ? TrendingUpIcon : TrendingDownIcon,
       color: stats && stats.totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600',
       bgColor: stats && stats.totalGainLoss >= 0
         ? (isDark ? 'bg-green-900/50' : 'bg-green-100')
         : (isDark ? 'bg-red-900/50' : 'bg-red-100'),
-      subtitle: stats ? `${stats.totalGainLossPercentage.toFixed(2)}%` : '0%',
+      subtitle: stats ? formatPercentage(stats.totalGainLossPercentage) : '0%',
     },
     {
       name: session?.user?.role === 'analyst' ? 'Assigned Investors' : 'Portfolios',
@@ -193,7 +194,7 @@ const DashboardOverview = () => {
 
   const tabs = [
     { id: 'overview', name: 'Overview', icon: ChartBarIcon },
-    { id: '3d-charts', name: '3D Visualizations', icon: CurrencyDollarIcon },
+    { id: '3d-charts', name: '3D Visualizations', icon: CurrencyRupeeIcon },
     { id: 'advanced-charts', name: 'Advanced Charts', icon: TrendingUpIcon },
     { id: 'analytics', name: 'Analytics', icon: DocumentTextIcon },
   ];

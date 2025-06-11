@@ -228,14 +228,50 @@ export default function StockPerformanceCubes({ data, className = '' }: StockPer
           </p>
         </div>
         
-        <div className="h-96 w-full">
+        <div className="h-96 w-full relative overflow-hidden">
           <Canvas
             camera={{ position: [8, 8, 8], fov: 60 }}
-            style={{ background: isDark ? '#111827' : '#f8fafc' }}
+            style={{
+              background: isDark
+                ? 'linear-gradient(135deg, #0f172a 0%, #111827 50%, #1e293b 100%)'
+                : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)'
+            }}
             shadows
+            gl={{
+              antialias: true,
+              alpha: true,
+              powerPreference: "high-performance",
+              preserveDrawingBuffer: true,
+              failIfMajorPerformanceCaveat: false
+            }}
+            onCreated={({ gl }) => {
+              // Handle WebGL context loss
+              gl.domElement.addEventListener('webglcontextlost', (event) => {
+                event.preventDefault();
+                console.warn('WebGL context lost in StockPerformanceCubes. Attempting to restore...');
+              });
+
+              gl.domElement.addEventListener('webglcontextrestored', () => {
+                console.log('WebGL context restored in StockPerformanceCubes.');
+              });
+            }}
           >
             <Scene data={data} isDark={isDark} />
           </Canvas>
+
+          {/* Interactive controls overlay */}
+          <div className="absolute top-2 left-2 space-y-1">
+            <div className={`px-2 py-1 rounded text-xs font-medium ${
+              isDark ? 'bg-gray-800/80 text-gray-300' : 'bg-white/80 text-gray-600'
+            }`}>
+              Drag to rotate
+            </div>
+            <div className={`px-2 py-1 rounded text-xs font-medium ${
+              isDark ? 'bg-gray-800/80 text-gray-300' : 'bg-white/80 text-gray-600'
+            }`}>
+              Scroll to zoom
+            </div>
+          </div>
         </div>
         
         {/* Performance summary */}

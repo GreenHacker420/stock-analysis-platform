@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { AlertCircle, Home, RefreshCw } from 'lucide-react'
 
 const errorMessages = {
@@ -20,7 +21,7 @@ const errorMessages = {
   SessionRequired: 'Please sign in to access this page.',
 }
 
-export default function AuthError() {
+function AuthErrorContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error') as keyof typeof errorMessages
 
@@ -60,7 +61,7 @@ export default function AuthError() {
                 <li>Clear your browser cookies and cache</li>
                 <li>Try signing in with a different Google account</li>
                 <li>Open the app in an incognito/private window</li>
-                <li>Make sure you're using the correct Google account</li>
+                <li>Make sure you&apos;re using the correct Google account</li>
                 <li>If the issue persists, contact support</li>
               </ol>
 
@@ -128,5 +129,24 @@ export default function AuthError() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthError() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 text-gray-500">
+            <AlertCircle className="h-12 w-12" />
+          </div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Loading...
+          </h2>
+        </div>
+      </div>
+    }>
+      <AuthErrorContent />
+    </Suspense>
   )
 }

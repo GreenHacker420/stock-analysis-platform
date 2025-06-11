@@ -104,33 +104,92 @@ export class StockDataService {
   ): Promise<HistoricalData[]> {
     const cacheKey = `historical_${symbol}_${period}`;
     const cached = cache.get<HistoricalData[]>(cacheKey);
-    
+
     if (cached) {
       return cached;
     }
 
     try {
-      const result = await yahooFinance.historical(symbol, {
-        period1: this.getPeriodStartDate(period),
-        period2: new Date(),
-        interval: '1d',
-      });
+      const formattedSymbol = this.formatIndianSymbol(symbol);
+      const startDate = this.getPeriodStartDate(period);
+      const endDate = new Date();
 
-      const historicalData: HistoricalData[] = result.map(item => ({
-        date: item.date,
-        open: item.open || 0,
-        high: item.high || 0,
-        low: item.low || 0,
-        close: item.close || 0,
-        volume: item.volume || 0,
-        adjClose: item.adjClose || 0,
+      // Format dates for EODHD API (YYYY-MM-DD)
+      const fromDate = startDate.toISOString().split('T')[0];
+      const toDate = endDate.toISOString().split('T')[0];
+
+      const response = await fetch(
+        `${EODHD_BASE_URL}/eod/${formattedSymbol}?api_token=${EODHD_API_KEY}&from=${fromDate}&to=${toDate}&period=d&fmt=json`
+      );
+
+      if (!response.ok) {
+        console.error(`Historical API Error: ${response.status} ${response.statusText}`);
+        return this.getMockHistoricalData(symbol, period);
+      }
+
+      const data = await response.json();
+
+      const historicalData: HistoricalData[] = data.map((item: any) => ({
+        date: new Date(item.date),
+        open: parseFloat(item.open) || 0,
+        high: parseFloat(item.high) || 0,
+        low: parseFloat(item.low) || 0,
+        close: parseFloat(item.close) || 0,
+        volume: parseInt(item.volume) || 0,
+        adjClose: parseFloat(item.adjusted_close) || parseFloat(item.close) || 0,
       }));
 
       cache.set(cacheKey, historicalData);
       return historicalData;
     } catch (error) {
       console.error(`Error fetching historical data for ${symbol}:`, error);
-      return [];
+      return this.getMockHistoricalData(symbol, period);
+    }
+  }
+
+  private getMockHistoricalData(symbol: string, period: string): HistoricalData[] {
+    // Generate mock historical data for fallback
+    const days = this.getPeriodDays(period);
+    const mockData: HistoricalData[] = [];
+    const basePrice = 1000 + Math.random() * 2000; // Random base price between 1000-3000
+
+    for (let i = days; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+
+      const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
+      const price = basePrice * (1 + variation);
+      const volume = Math.floor(Math.random() * 1000000) + 100000;
+
+      mockData.push({
+        date,
+        open: price * (1 + (Math.random() - 0.5) * 0.02),
+        high: price * (1 + Math.random() * 0.03),
+        low: price * (1 - Math.random() * 0.03),
+        close: price,
+        volume,
+        adjClose: price,
+      });
+    }
+
+    console.warn(`Using mock historical data for ${symbol} - API unavailable`);
+    return mockData;
+  }
+
+  private getPeriodDays(period: string): number {
+    switch (period) {
+      case '1d': return 1;
+      case '5d': return 5;
+      case '1mo': return 30;
+      case '3mo': return 90;
+      case '6mo': return 180;
+      case '1y': return 365;
+      case '2y': return 730;
+      case '5y': return 1825;
+      case '10y': return 3650;
+      case 'ytd': return Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (1000 * 60 * 60 * 24));
+      case 'max': return 3650; // 10 years max for mock data
+      default: return 365;
     }
   }
 
@@ -300,14 +359,138 @@ export class StockDataService {
 
   async searchStocks(query: string): Promise<{ symbol: string; name: string }[]> {
     try {
-      const results = await yahooFinance.search(query);
-      return results.quotes.slice(0, 10).map(quote => ({
-        symbol: quote.symbol,
-        name: quote.longname || quote.shortname || quote.symbol,
+      const response = await fetch(
+        `${EODHD_BASE_URL}/search/${query}?api_token=${EODHD_API_KEY}&type=stock&exchange=NSE`
+      );
+
+      if (!response.ok) {
+        console.error(`Search API Error: ${response.status} ${response.statusText}`);
+        return this.getMockSearchResults(query);
+      }
+
+      const data = await response.json();
+
+      return data.slice(0, 10).map((item: any) => ({
+        symbol: item.Code || item.symbol || '',
+        name: item.Name || item.name || item.Code || item.symbol || 'Unknown',
       }));
     } catch (error) {
       console.error('Error searching stocks:', error);
+      return this.getMockSearchResults(query);
+    }
+  }
+
+  private getMockSearchResults(query: string): { symbol: string; name: string }[] {
+    try {
+      const { mockIndianStocks } = require('@/data/mockIndianStocks');
+      const filtered = mockIndianStocks.filter((stock: any) =>
+        stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
+        stock.companyName.toLowerCase().includes(query.toLowerCase())
+      );
+
+      return filtered.slice(0, 10).map((stock: any) => ({
+        symbol: stock.symbol,
+        name: stock.companyName,
+      }));
+    } catch (error) {
+      console.error('Error loading mock search data:', error);
       return [];
     }
+  }
+
+  async getMultipleQuotes(symbols: string[]): Promise<(StockQuote | null)[]> {
+    const promises = symbols.map(symbol => this.getQuote(symbol));
+    try {
+      return await Promise.allSettled(promises).then(results =>
+        results.map(result =>
+          result.status === 'fulfilled' ? result.value : null
+        )
+      );
+    } catch (error) {
+      console.error('Error fetching multiple quotes:', error);
+      return symbols.map(() => null);
+    }
+  }
+
+  async getQuoteWithFallback(symbol: string): Promise<StockQuote | null> {
+    try {
+      // Try to get real-time data first
+      const quote = await this.getQuote(symbol);
+      if (quote) return quote;
+
+      // Fallback to mock data if available
+      const mockData = this.getMockQuote(symbol);
+      if (mockData) {
+        console.warn(`Using mock data for ${symbol} - API unavailable`);
+        return mockData;
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`Error fetching quote for ${symbol}:`, error);
+
+      // Try mock data as last resort
+      const mockData = this.getMockQuote(symbol);
+      if (mockData) {
+        console.warn(`Using mock data for ${symbol} - API error`);
+        return mockData;
+      }
+
+      return null;
+    }
+  }
+
+  // Market status and utility methods
+  isMarketOpen(): boolean {
+    const now = new Date();
+    const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const hours = istTime.getHours();
+    const minutes = istTime.getMinutes();
+    const day = istTime.getDay();
+
+    // Market is closed on weekends
+    if (day === 0 || day === 6) {
+      return false;
+    }
+
+    // Market hours: 9:15 AM to 3:30 PM IST
+    const currentTime = hours * 60 + minutes;
+    const marketOpen = 9 * 60 + 15; // 9:15 AM
+    const marketClose = 15 * 60 + 30; // 3:30 PM
+
+    return currentTime >= marketOpen && currentTime <= marketClose;
+  }
+
+  getMarketStatus(): { isOpen: boolean; nextOpen?: Date; message: string } {
+    const isOpen = this.isMarketOpen();
+
+    if (isOpen) {
+      return {
+        isOpen: true,
+        message: 'Market is currently open'
+      };
+    }
+
+    const now = new Date();
+    const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    const nextOpen = new Date(istTime);
+
+    // If it's weekend, set to next Monday
+    if (istTime.getDay() === 0) { // Sunday
+      nextOpen.setDate(istTime.getDate() + 1);
+    } else if (istTime.getDay() === 6) { // Saturday
+      nextOpen.setDate(istTime.getDate() + 2);
+    } else if (istTime.getHours() >= 15 && istTime.getMinutes() >= 30) {
+      // After market close, set to next day
+      nextOpen.setDate(istTime.getDate() + 1);
+    }
+
+    nextOpen.setHours(9, 15, 0, 0);
+
+    return {
+      isOpen: false,
+      nextOpen,
+      message: `Market is closed. Next opening: ${nextOpen.toLocaleString()}`
+    };
   }
 }

@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Navigation from '@/components/layout/Navigation';
+import { formatINR, formatPercentage } from '@/lib/currencyUtils';
 import { PlusIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 interface Portfolio {
@@ -141,7 +142,7 @@ export default function PortfoliosPage() {
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-500">Total Value</span>
                         <span className="text-sm font-medium text-gray-900">
-                          ${portfolio.totalValue.toLocaleString()}
+                          {formatINR(portfolio.totalValue, { compact: true })}
                         </span>
                       </div>
                       
@@ -150,7 +151,7 @@ export default function PortfoliosPage() {
                         <span className={`text-sm font-medium ${
                           portfolio.totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          ${portfolio.totalGainLoss.toLocaleString()} ({portfolio.totalGainLossPercentage.toFixed(2)}%)
+                          {formatINR(portfolio.totalGainLoss, { compact: true })} ({formatPercentage(portfolio.totalGainLossPercentage)})
                         </span>
                       </div>
                       

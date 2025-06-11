@@ -16,7 +16,7 @@ export default function ThemeToggle({
   size = 'md',
   showLabel = false 
 }: ThemeToggleProps) {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
 
   const sizeClasses = {
     sm: 'w-10 h-6',
@@ -51,73 +51,146 @@ export default function ThemeToggle({
         aria-checked={isDark}
         aria-label="Toggle theme"
       >
-        {/* Background gradient */}
-        <div className={`absolute inset-0 rounded-full transition-all duration-300 ${
-          isDark 
-            ? 'bg-gradient-to-r from-blue-600 to-purple-600' 
-            : 'bg-gradient-to-r from-yellow-400 to-orange-400'
-        }`} />
+        {/* Background gradient with enhanced animations */}
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          animate={{
+            background: isDark
+              ? 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #1e40af 100%)'
+              : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)'
+          }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        />
+
+        {/* Animated background overlay */}
+        <motion.div
+          className="absolute inset-0 rounded-full opacity-30"
+          animate={{
+            background: isDark
+              ? 'radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.8) 0%, transparent 50%)'
+              : 'radial-gradient(circle at 70% 70%, rgba(254, 215, 170, 0.8) 0%, transparent 50%)'
+          }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+        />
         
-        {/* Toggle circle */}
+        {/* Toggle circle with enhanced styling */}
         <motion.div
           className={`relative inline-block ${
             size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-5 h-5' : 'w-6 h-6'
-          } bg-white rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center`}
+          } bg-white rounded-full flex items-center justify-center overflow-hidden`}
+          style={{
+            boxShadow: isDark
+              ? '0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              : '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
+          }}
           animate={{
-            x: isDark 
+            x: isDark
               ? size === 'sm' ? 16 : size === 'md' ? 20 : 24
-              : 2
+              : 2,
+            scale: isDark ? 1.05 : 1
           }}
           transition={{
             type: "spring",
-            stiffness: 500,
-            damping: 30
+            stiffness: 400,
+            damping: 25,
+            mass: 0.8
           }}
         >
-          {/* Icon */}
+          {/* Icon with enhanced animations */}
           <motion.div
+            className="relative"
             initial={false}
             animate={{
               scale: 1,
-              rotate: isDark ? 180 : 0
+              rotate: isDark ? 360 : 0
             }}
             transition={{
-              duration: 0.3,
+              duration: 0.6,
               ease: "easeInOut"
             }}
           >
-            {isDark ? (
+            <motion.div
+              animate={{
+                opacity: isDark ? 1 : 0,
+                scale: isDark ? 1 : 0.5
+              }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
               <MoonIcon className={`${iconSizes[size]} text-blue-600`} />
-            ) : (
+            </motion.div>
+            <motion.div
+              animate={{
+                opacity: isDark ? 0 : 1,
+                scale: isDark ? 0.5 : 1
+              }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center justify-center"
+            >
               <SunIcon className={`${iconSizes[size]} text-yellow-500`} />
-            )}
+            </motion.div>
           </motion.div>
         </motion.div>
         
-        {/* Stars for dark mode */}
-        {isDark && (
-          <div className="absolute inset-0 overflow-hidden rounded-full">
-            {[...Array(3)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-white rounded-full"
-                style={{
-                  left: `${20 + i * 15}%`,
-                  top: `${30 + i * 10}%`,
-                }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.5,
-                }}
-              />
-            ))}
-          </div>
-        )}
+        {/* Enhanced stars for dark mode */}
+        <motion.div
+          className="absolute inset-0 overflow-hidden rounded-full"
+          animate={{ opacity: isDark ? 1 : 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {[...Array(5)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute bg-white rounded-full"
+              style={{
+                width: i % 2 === 0 ? '2px' : '1px',
+                height: i % 2 === 0 ? '2px' : '1px',
+                left: `${15 + i * 12}%`,
+                top: `${25 + (i * 8) % 40}%`,
+              }}
+              animate={{
+                opacity: [0.3, 1, 0.3],
+                scale: [0.8, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 2 + i * 0.3,
+                repeat: Infinity,
+                delay: i * 0.4,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </motion.div>
+
+        {/* Sun rays for light mode */}
+        <motion.div
+          className="absolute inset-0 overflow-hidden rounded-full"
+          animate={{ opacity: isDark ? 0 : 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-px h-2 bg-yellow-300 origin-bottom"
+              style={{
+                left: '50%',
+                bottom: '50%',
+                transformOrigin: '50% 100%',
+                transform: `rotate(${i * 45}deg) translateX(-50%)`,
+              }}
+              animate={{
+                opacity: [0.4, 0.8, 0.4],
+                scaleY: [0.8, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                delay: i * 0.1,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </motion.div>
       </button>
     </div>
   );

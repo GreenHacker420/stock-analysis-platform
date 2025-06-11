@@ -1,96 +1,148 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Portfolio from '@/models/Portfolio';
 import AnalysisReport from '@/models/AnalysisReport';
-import UserAnalyst from '@/models/UserAnalyst';
+import User from '@/models/User';
+import { mockPortfolios } from '@/data/mockPortfolios';
+import { mockAnalysisReports } from '@/data/mockReports';
+import { mockUsers } from '@/data/mockUsers';
 
-export async function GET(request: NextRequest) {
+// Helper function to ensure database is seeded
+async function ensureDatabaseSeeded() {
+  try {
+    const userCount = await User.countDocuments();
+    const portfolioCount = await Portfolio.countDocuments();
+    const reportCount = await AnalysisReport.countDocuments();
+
+    if (userCount === 0 || portfolioCount === 0 || reportCount === 0) {
+      console.log('Dashboard stats: Database appears empty, triggering seeding...');
+
+      // Trigger seeding by calling the seed endpoint internally
+      const seedResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/admin/seed-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (seedResponse.ok) {
+        console.log('Dashboard stats: Database seeding completed');
+      } else {
+        console.warn('Dashboard stats: Seeding failed, will use fallback data');
+      }
+    }
+  } catch (error) {
+    console.error('Dashboard stats: Error during seeding check:', error);
+  }
+}
+
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectDB();
 
+    // Ensure database is seeded
+    await ensureDatabaseSeeded();
+
     let stats;
 
-    if (session.user.role === 'investor') {
-      // Get investor stats
-      const portfolios = await Portfolio.find({ 
-        investorId: session.user.id,
-        isActive: true 
-      });
+    try {
+      if (session.user.role === 'investor') {
+        // For demo purposes, calculate stats from all portfolios
+        const portfolios = await Portfolio.find({ isActive: true });
 
-      const totalPortfolioValue = portfolios.reduce((sum, portfolio) => sum + portfolio.totalValue, 0);
-      const totalGainLoss = portfolios.reduce((sum, portfolio) => sum + portfolio.totalGainLoss, 0);
-      const totalCost = portfolios.reduce((sum, portfolio) => sum + portfolio.totalCost, 0);
+        const totalPortfolioValue = portfolios.reduce((sum, portfolio) => sum + portfolio.totalValue, 0);
+        const totalGainLoss = portfolios.reduce((sum, portfolio) => sum + portfolio.totalGainLoss, 0);
+        const totalCost = portfolios.reduce((sum, portfolio) => sum + portfolio.totalCost, 0);
+        const totalGainLossPercentage = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
+
+        // Get recent reports count (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const recentReportsCount = await AnalysisReport.countDocuments({
+          createdAt: { $gte: thirtyDaysAgo },
+          isActive: true
+        });
+
+        stats = {
+          totalPortfolioValue,
+          totalGainLoss,
+          totalGainLossPercentage,
+          portfolioCount: portfolios.length,
+          recentReportsCount,
+        };
+
+      } else if (session.user.role === 'analyst') {
+        // For demo purposes, calculate stats from all portfolios and reports
+        const portfolios = await Portfolio.find({ isActive: true });
+
+        const totalPortfolioValue = portfolios.reduce((sum, portfolio) => sum + portfolio.totalValue, 0);
+        const totalGainLoss = portfolios.reduce((sum, portfolio) => sum + portfolio.totalGainLoss, 0);
+        const totalCost = portfolios.reduce((sum, portfolio) => sum + portfolio.totalCost, 0);
+        const totalGainLossPercentage = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
+
+        // Get recent reports count (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const recentReportsCount = await AnalysisReport.countDocuments({
+          createdAt: { $gte: thirtyDaysAgo },
+          isActive: true
+        });
+
+        const totalInvestors = await User.countDocuments({ role: 'investor', isActive: true });
+
+        stats = {
+          totalPortfolioValue,
+          totalGainLoss,
+          totalGainLossPercentage,
+          portfolioCount: portfolios.length,
+          recentReportsCount,
+          assignedInvestorsCount: totalInvestors,
+        };
+
+      } else {
+        return NextResponse.json({ error: 'Invalid user role' }, { status: 403 });
+      }
+
+    } catch (dbError) {
+      console.error('Database error, falling back to mock data:', dbError);
+
+      // Fallback to mock data calculations
+      const totalPortfolioValue = mockPortfolios.reduce((sum, portfolio) => sum + portfolio.totalValue, 0);
+      const totalGainLoss = mockPortfolios.reduce((sum, portfolio) => sum + portfolio.totalGainLoss, 0);
+      const totalCost = mockPortfolios.reduce((sum, portfolio) => sum + portfolio.totalCost, 0);
       const totalGainLossPercentage = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
 
-      // Get recent reports count (last 30 days)
+      // Get recent reports count from mock data
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const recentReportsCount = await AnalysisReport.countDocuments({
-        investorId: session.user.id,
-        createdAt: { $gte: thirtyDaysAgo },
-        isActive: true
-      });
+
+      const recentReportsCount = mockAnalysisReports.filter(report =>
+        new Date(report.createdAt) >= thirtyDaysAgo
+      ).length;
 
       stats = {
         totalPortfolioValue,
         totalGainLoss,
         totalGainLossPercentage,
-        portfolioCount: portfolios.length,
+        portfolioCount: mockPortfolios.length,
         recentReportsCount,
+        assignedInvestorsCount: mockUsers.filter(u => u.role === 'investor').length,
+        fallback: true
       };
-
-    } else if (session.user.role === 'analyst') {
-      // Get analyst stats
-      const assignments = await UserAnalyst.find({
-        analystId: session.user.id,
-        status: 'active'
-      });
-
-      const investorIds = assignments.map(assignment => assignment.investorId);
-      
-      const portfolios = await Portfolio.find({
-        investorId: { $in: investorIds },
-        isActive: true
-      });
-
-      const totalPortfolioValue = portfolios.reduce((sum, portfolio) => sum + portfolio.totalValue, 0);
-      const totalGainLoss = portfolios.reduce((sum, portfolio) => sum + portfolio.totalGainLoss, 0);
-      const totalCost = portfolios.reduce((sum, portfolio) => sum + portfolio.totalCost, 0);
-      const totalGainLossPercentage = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
-
-      // Get recent reports count (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      const recentReportsCount = await AnalysisReport.countDocuments({
-        analystId: session.user.id,
-        createdAt: { $gte: thirtyDaysAgo },
-        isActive: true
-      });
-
-      stats = {
-        totalPortfolioValue,
-        totalGainLoss,
-        totalGainLossPercentage,
-        portfolioCount: portfolios.length,
-        recentReportsCount,
-        assignedInvestorsCount: investorIds.length,
-      };
-
-    } else {
-      return NextResponse.json({ error: 'Invalid user role' }, { status: 403 });
     }
 
-    return NextResponse.json({ stats });
+    return NextResponse.json({
+      success: true,
+      stats
+    });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
     return NextResponse.json(

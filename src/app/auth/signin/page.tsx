@@ -2,14 +2,28 @@
 
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useEffect, useState, Suspense } from 'react';
+import Link from 'next/link';
+import { AlertCircle, Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 
-export default function SignIn() {
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [formErrors, setFormErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
+
   const error = searchParams.get('error');
+  const message = searchParams.get('message');
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   useEffect(() => {
@@ -22,7 +36,7 @@ export default function SignIn() {
   }, [router]);
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
+    setGoogleLoading(true);
     try {
       const result = await signIn('google', {
         callbackUrl,
@@ -38,36 +52,111 @@ export default function SignIn() {
       console.error('Sign in error:', error);
       router.push('/auth/error?error=Configuration');
     } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleCredentialsSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Reset errors
+    setFormErrors({});
+
+    // Validate form
+    const errors: typeof formErrors = {};
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setFormErrors({
+          general: result.error === 'CredentialsSignin'
+            ? 'Invalid email or password'
+            : result.error
+        });
+      } else if (result?.ok) {
+        router.push(callbackUrl);
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
+      setFormErrors({
+        general: 'An unexpected error occurred. Please try again.'
+      });
+    } finally {
       setLoading(false);
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Clear error when user starts typing
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12">
-            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">SA</span>
-            </div>
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 dark:bg-indigo-900">
+            <LogIn className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Access your stock analysis platform
           </p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        {/* Success Message */}
+        {message && (
+          <div className="rounded-md bg-green-50 dark:bg-green-900/50 p-4">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 text-green-400" />
+              <div className="ml-3">
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  {message}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Messages */}
+        {(error || formErrors.general) && (
+          <div className="rounded-md bg-red-50 dark:bg-red-900/50 p-4">
             <div className="flex">
               <AlertCircle className="h-5 w-5 text-red-400" />
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
                   Authentication Error
                 </h3>
-                <div className="mt-2 text-sm text-red-700">
+                <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                  {formErrors.general && <p>{formErrors.general}</p>}
                   {error === 'OAuthAccountNotLinked' && (
                     <p>This account is already linked to another user. Please try a different account or clear your browser data.</p>
                   )}
@@ -77,7 +166,7 @@ export default function SignIn() {
                   {error === 'Configuration' && (
                     <p>There is a configuration issue. Please contact support.</p>
                   )}
-                  {!['OAuthAccountNotLinked', 'AccessDenied', 'Configuration'].includes(error) && (
+                  {error && !['OAuthAccountNotLinked', 'AccessDenied', 'Configuration'].includes(error) && !formErrors.general && (
                     <p>An error occurred during sign in. Please try again.</p>
                   )}
                 </div>
@@ -86,14 +175,113 @@ export default function SignIn() {
           </div>
         )}
         <div className="mt-8 space-y-6">
+          {/* Email/Password Form */}
+          <form onSubmit={handleCredentialsSignIn} className="space-y-4">
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email Address
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${
+                    formErrors.email ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
+                  } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm bg-white dark:bg-gray-700`}
+                  placeholder="Enter your email address"
+                />
+              </div>
+              {formErrors.email && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.email}</p>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Password
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={`appearance-none relative block w-full pl-10 pr-10 py-2 border ${
+                    formErrors.password ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
+                  } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm bg-white dark:bg-gray-700`}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
+              </div>
+              {formErrors.password && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{formErrors.password}</p>
+              )}
+            </div>
+
+            {/* Sign In Button */}
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              >
+                {loading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  'Sign in'
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 text-gray-500 dark:text-gray-400">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          {/* Google Sign In */}
           <div>
             <button
               onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={googleLoading}
+              className="group relative w-full flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              {googleLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700 dark:border-gray-300"></div>
               ) : (
                 <>
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -119,14 +307,44 @@ export default function SignIn() {
               )}
             </button>
           </div>
-          
+
+          {/* Sign Up Link */}
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Don't have an account?{' '}
+              <Link
+                href="/auth/signup"
+                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+              >
+                Sign up here
+              </Link>
+            </p>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               By signing in, you agree to our terms of service and privacy policy.
             </p>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Loading...
+          </h2>
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }

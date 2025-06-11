@@ -12,6 +12,7 @@ import {
   DocumentTextIcon,
   CogIcon,
   UserGroupIcon,
+  CurrencyRupeeIcon,
 } from '@heroicons/react/24/outline';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -26,7 +27,8 @@ const Navigation = () => {
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Portfolios', href: '/portfolios', icon: ChartBarIcon },
     { name: 'Reports', href: '/reports', icon: DocumentTextIcon },
-    ...(session?.user?.role === 'analyst' 
+    { name: 'Stocks', href: '/stocks', icon: CurrencyRupeeIcon },
+    ...(session?.user?.role === 'analyst'
       ? [{ name: 'Investors', href: '/investors', icon: UserGroupIcon }]
       : []
     ),
@@ -58,14 +60,10 @@ const Navigation = () => {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                       isActive
-                        ? `border-blue-500 ${isDark ? 'text-white' : 'text-gray-900'}`
-                        : `border-transparent ${
-                            isDark
-                              ? 'text-gray-300 hover:border-gray-500 hover:text-white'
-                              : 'text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                          }`
+                        ? 'border-blue-500 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     }`}
                   >
                     <item.icon className="w-4 h-4 mr-2" />

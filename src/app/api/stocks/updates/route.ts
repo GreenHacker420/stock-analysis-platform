@@ -6,8 +6,10 @@ import { withRateLimit, stockDataRateLimiter } from '@/lib/rateLimiting'
 import { captureError, addBreadcrumb } from '@/lib/errorTracking'
 
 async function handleStockUpdates(request: NextRequest) {
+  let session: any = null;
+
   try {
-    const session = await getServerSession(authOptions)
+    session = await getServerSession(authOptions)
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

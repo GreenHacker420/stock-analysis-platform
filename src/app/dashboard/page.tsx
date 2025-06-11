@@ -37,7 +37,7 @@ export default function DashboardPage() {
       isDark ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
       <Navigation />
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-[1600px] mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <DashboardOverview />
         </div>
