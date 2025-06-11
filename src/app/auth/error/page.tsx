@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { AlertCircle, Home, RefreshCw } from 'lucide-react'
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 const errorMessages = {
   Configuration: 'There is a problem with the server configuration.',
   AccessDenied: 'Access denied. You do not have permission to sign in.',

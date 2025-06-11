@@ -1,9 +1,31 @@
-import { IPortfolio } from '@/models/Portfolio';
-import { mockUsers } from './mockUsers';
+// Mock portfolio interface that doesn't conflict with database schema
+export interface MockHolding {
+  symbol: string;
+  companyName: string;
+  quantity: number;
+  averagePrice: number;
+  currentPrice: number;
+  totalValue: number;
+  totalCost: number;
+  gainLoss: number;
+  gainLossPercentage: number;
+  lastUpdated: Date;
+}
 
-export interface MockPortfolio extends Omit<IPortfolio, '_id' | 'investorId' | 'createdAt' | 'updatedAt'> {
+export interface MockPortfolio {
   id: string;
   investorId: string;
+  name: string;
+  description?: string;
+  totalValue: number;
+  totalCost: number;
+  totalGainLoss: number;
+  totalGainLossPercentage: number;
+  holdings: MockHolding[];
+  cash: number;
+  isActive: boolean;
+  lastAnalyzed?: Date;
+  riskScore: number;
   createdAt: string;
   updatedAt: string;
 }

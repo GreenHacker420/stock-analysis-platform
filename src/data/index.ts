@@ -1,15 +1,14 @@
 // Central export file for all mock data
 
-// User data
-export {
+// Import all data first
+import {
   mockUsers,
   mockAnalysts,
   mockInvestors,
   type MockUser,
 } from './mockUsers';
 
-// Indian stock data
-export {
+import {
   mockIndianStocks,
   getIndianStockBySymbol,
   getIndianStocksBySymbols,
@@ -17,8 +16,7 @@ export {
   type MockIndianStock,
 } from './mockIndianStocks';
 
-// Portfolio data
-export {
+import {
   mockPortfolios,
   getPortfoliosByInvestorId,
   getPortfolioById,
@@ -28,8 +26,7 @@ export {
   type MockPortfolio,
 } from './mockPortfolios';
 
-// Analysis reports data
-export {
+import {
   mockAnalysisReports,
   getReportsByAnalystId,
   getReportsByInvestorId,
@@ -39,6 +36,34 @@ export {
   getRecentReports,
   type MockAnalysisReport,
 } from './mockReports';
+
+// Re-export everything
+export {
+  mockUsers,
+  mockAnalysts,
+  mockInvestors,
+  type MockUser,
+  mockIndianStocks,
+  getIndianStockBySymbol,
+  getIndianStocksBySymbols,
+  getIndianStocksBySector,
+  type MockIndianStock,
+  mockPortfolios,
+  getPortfoliosByInvestorId,
+  getPortfolioById,
+  getActivePortfolios,
+  getTotalPortfolioValue,
+  getPortfoliosByRiskScore,
+  type MockPortfolio,
+  mockAnalysisReports,
+  getReportsByAnalystId,
+  getReportsByInvestorId,
+  getReportsByPortfolioId,
+  getPublishedReports,
+  getReportsByTag,
+  getRecentReports,
+  type MockAnalysisReport,
+};
 
 // Utility functions for mock data
 export const getAllMockData = () => ({
@@ -71,8 +96,8 @@ export const generateSamplePortfolioData = (userId: string) => {
     holdings: portfolio.holdings.map(holding => ({
       symbol: holding.symbol,
       name: holding.companyName,
-      value: holding.totalValue,
-      percentage: (holding.totalValue / portfolio.totalValue) * 100,
+      value: (holding as any).marketValue || (holding as any).totalValue || 0,
+      percentage: ((holding as any).marketValue || (holding as any).totalValue || 0) / portfolio.totalValue * 100,
       color: `#${Math.floor(Math.random()*16777215).toString(16)}`, // Random color
       sector: 'Technology', // Default sector
     })),

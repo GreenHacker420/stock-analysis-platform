@@ -1,0 +1,48 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Redirect rules
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "origin-when-cross-origin"
+    X-XSS-Protection = "1; mode=block"
+
+# Cache static assets
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Environment variables (these will be set in Netlify UI)
+# MONGODB_URI
+# NEXTAUTH_SECRET
+# NEXTAUTH_URL
+# EODHD_API_KEY
+# GEMINI_API_KEY
+# GOOGLE_CLIENT_ID
+# GOOGLE_CLIENT_SECRET

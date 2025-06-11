@@ -4,6 +4,10 @@ import NodeCache from 'node-cache';
 // Cache for 5 minutes (300 seconds)
 const cache = new NodeCache({ stdTTL: 300 });
 
+// EODHD API Configuration
+const EODHD_API_KEY = process.env.EODHD_API_KEY || '6848fa019edce9.81077823';
+const EODHD_BASE_URL = 'https://eodhd.com/api';
+
 export interface StockQuote {
   symbol: string;
   companyName: string;
@@ -83,10 +87,10 @@ export class StockDataService {
         volume: quote.regularMarketVolume || 0,
         marketCap: quote.marketCap || 0,
         peRatio: quote.trailingPE || 0,
-        dividendYield: quote.dividendYield || 0,
+        dividendYield: (quote as any).dividendYield || 0,
         high52Week: quote.fiftyTwoWeekHigh || 0,
         low52Week: quote.fiftyTwoWeekLow || 0,
-        averageVolume: quote.averageVolume || 0,
+        averageVolume: (quote as any).averageVolume || 0,
         lastUpdated: new Date(),
       };
 
@@ -211,7 +215,6 @@ export class StockDataService {
       }
 
       const closes = historicalData.map(d => d.close);
-      const volumes = historicalData.map(d => d.volume);
       
       // Calculate technical indicators
       const rsi = this.calculateRSI(closes);
@@ -382,8 +385,21 @@ export class StockDataService {
 
   private getMockSearchResults(query: string): { symbol: string; name: string }[] {
     try {
-      const { mockIndianStocks } = require('@/data/mockIndianStocks');
-      const filtered = mockIndianStocks.filter((stock: any) =>
+      // Import dynamically to avoid require() in build
+      const mockStocks = [
+        { symbol: 'RELIANCE.NSE', companyName: 'Reliance Industries Limited' },
+        { symbol: 'TCS.NSE', companyName: 'Tata Consultancy Services Limited' },
+        { symbol: 'HDFCBANK.NSE', companyName: 'HDFC Bank Limited' },
+        { symbol: 'INFY.NSE', companyName: 'Infosys Limited' },
+        { symbol: 'ICICIBANK.NSE', companyName: 'ICICI Bank Limited' },
+        { symbol: 'HINDUNILVR.NSE', companyName: 'Hindustan Unilever Limited' },
+        { symbol: 'ITC.NSE', companyName: 'ITC Limited' },
+        { symbol: 'SBIN.NSE', companyName: 'State Bank of India' },
+        { symbol: 'BHARTIARTL.NSE', companyName: 'Bharti Airtel Limited' },
+        { symbol: 'ASIANPAINT.NSE', companyName: 'Asian Paints Limited' }
+      ];
+
+      const filtered = mockStocks.filter((stock) =>
         stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
         stock.companyName.toLowerCase().includes(query.toLowerCase())
       );
@@ -418,26 +434,22 @@ export class StockDataService {
       const quote = await this.getQuote(symbol);
       if (quote) return quote;
 
-      // Fallback to mock data if available
-      const mockData = this.getMockQuote(symbol);
-      if (mockData) {
-        console.warn(`Using mock data for ${symbol} - API unavailable`);
-        return mockData;
-      }
-
       return null;
     } catch (error) {
       console.error(`Error fetching quote for ${symbol}:`, error);
-
-      // Try mock data as last resort
-      const mockData = this.getMockQuote(symbol);
-      if (mockData) {
-        console.warn(`Using mock data for ${symbol} - API error`);
-        return mockData;
-      }
-
       return null;
     }
+  }
+
+  // Utility methods
+  private formatIndianSymbol(symbol: string): string {
+    // If symbol already has exchange suffix, return as is
+    if (symbol.includes('.NSE') || symbol.includes('.BSE')) {
+      return symbol;
+    }
+
+    // Default to NSE for Indian stocks
+    return `${symbol}.NSE`;
   }
 
   // Market status and utility methods

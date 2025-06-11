@@ -1,8 +1,23 @@
-import { IUser } from '@/models/User';
+// Mock user interface that doesn't conflict with database schema
+export interface MockUserPreferences {
+  riskTolerance: 'low' | 'medium' | 'high';
+  investmentGoals: string[];
+  notifications: {
+    email: boolean;
+    push: boolean;
+  };
+}
 
-export interface MockUser extends Omit<IUser, '_id' | 'createdAt' | 'updatedAt'> {
+export interface MockUser {
   id: string;
+  email: string;
+  name: string;
+  image?: string;
+  role: 'analyst' | 'investor';
   password?: string;
+  isActive: boolean;
+  lastLogin: string; // ISO string instead of Date
+  preferences: MockUserPreferences;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,10 +1,46 @@
-import { IAnalysisReport } from '@/models/AnalysisReport';
+// Mock analysis report interfaces that don't conflict with database schema
+export interface MockRecommendation {
+  type: 'buy' | 'sell' | 'hold' | 'reduce';
+  symbol: string;
+  companyName: string;
+  targetPrice: number;
+  currentPrice: number;
+  reasoning: string;
+  priority: 'high' | 'medium' | 'low';
+  timeframe: string;
+}
 
-export interface MockAnalysisReport extends Omit<IAnalysisReport, '_id' | 'analystId' | 'investorId' | 'portfolioId' | 'createdAt' | 'updatedAt'> {
+export interface MockRiskAssessment {
+  overallRisk: string;
+  riskScore: number;
+  factors: string[];
+  mitigation: string[];
+}
+
+export interface MockPerformanceMetrics {
+  totalReturn: number;
+  benchmarkReturn: number;
+  alpha: number;
+  beta: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+  volatility: number;
+}
+
+export interface MockAnalysisReport {
   id: string;
   analystId: string;
   investorId: string;
   portfolioId?: string;
+  title: string;
+  summary: string;
+  content: string;
+  recommendations: MockRecommendation[];
+  riskAssessment: MockRiskAssessment;
+  performanceMetrics: MockPerformanceMetrics;
+  status: 'draft' | 'published' | 'archived';
+  tags: string[];
+  isShared: boolean;
   createdAt: string;
   updatedAt: string;
 }
