@@ -30,9 +30,7 @@ const nextConfig = {
     unoptimized: true, // For static export if needed
   },
   // Output configuration for deployment
-  output: 'export', // For static export to Netlify
-  trailingSlash: true,
-  distDir: 'out',
+  output: 'standalone', // For Docker/serverless deployment
   // Disable x-powered-by header
   poweredByHeader: false,
   // Compression

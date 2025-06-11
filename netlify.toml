@@ -1,6 +1,5 @@
 [build]
   command = "npm run build"
-  publish = "out"
 
 [build.environment]
   NODE_ENV = "production"
@@ -8,15 +7,6 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[functions]
-  node_bundler = "esbuild"
-
-# Redirect rules
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
 
 # Headers for security
 [[headers]]
