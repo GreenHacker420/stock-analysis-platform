@@ -14,7 +14,7 @@ const nextConfig = {
   serverExternalPackages: ['mongoose'],
   // Disable static optimization for problematic pages
   experimental: {
-    missingSuspenseWithCSRBailout: false,
+    // Remove invalid option
   },
   // Skip static generation for error pages
   generateBuildId: async () => {
@@ -30,7 +30,9 @@ const nextConfig = {
     unoptimized: true, // For static export if needed
   },
   // Output configuration for deployment
-  output: 'standalone', // For Docker/serverless deployment
+  output: 'export', // For static export to Netlify
+  trailingSlash: true,
+  distDir: 'out',
   // Disable x-powered-by header
   poweredByHeader: false,
   // Compression
