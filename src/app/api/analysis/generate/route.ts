@@ -6,10 +6,8 @@ import Portfolio from '@/models/Portfolio';
 import User from '@/models/User';
 import AnalysisReport from '@/models/AnalysisReport';
 import UserAnalyst from '@/models/UserAnalyst';
-import { generateAIAnalysis } from '@/lib/geminiAI';
-import { mockAnalysisReports } from '@/data/mockReports';
-import { mockUsers } from '@/data/mockUsers';
-import { mockPortfolios } from '@/data/mockPortfolios';
+import { StockDataService } from '@/lib/stockData';
+import { GeminiAIService } from '@/lib/geminiAI';
 
 export async function POST(request: NextRequest) {
   try {
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
       validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Valid for 7 days
       tags: ['ai-generated', 'portfolio-analysis'],
       metadata: {
-        aiModel: 'gemini-pro',
+        aiModel: 'gemini-2.0-flash',
         processingTime,
         dataSourcesUsed: ['yahoo-finance', 'technical-indicators'],
         confidence: 85,
