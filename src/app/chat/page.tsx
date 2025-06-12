@@ -136,7 +136,12 @@ What would you like to know about your investments today?`,
       const response = await fetch(`/api/chat/conversations/${id}`);
       if (response.ok) {
         const data = await response.json();
-        setMessages(data.conversation.messages || []);
+        // Convert timestamp strings back to Date objects
+        const messagesWithDateObjects = (data.conversation.messages || []).map((message: any) => ({
+          ...message,
+          timestamp: new Date(message.timestamp)
+        }));
+        setMessages(messagesWithDateObjects);
         setConversationId(id);
         setShowSidebar(false);
       }
@@ -272,17 +277,20 @@ What would you like to know about your investments today?`,
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 ${
-      isDark ? 'bg-gray-900' : 'bg-gray-50'
-    }`}>
+    <div className={`min-h-screen transition-colors duration-200 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
-
-      <div className="flex h-screen pt-16">
+      {/* Main Flex Container: fills viewport minus navbar */}
+      <div className="flex h-[calc(100vh-4rem)] min-h-0">
         {/* Sidebar */}
-        <div className={`${showSidebar ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-          isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'
-        } border-r shadow-xl lg:shadow-none`}>
-          <div className="flex flex-col h-full">
+        <div className={`
+          ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
+          fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 ease-in-out
+          lg:translate-x-0 lg:static lg:inset-0
+          ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}
+          border-r shadow-xl lg:shadow-none
+          flex flex-col h-full min-h-0
+        `}>
+          <div className="flex flex-col flex-1 min-h-0 pt-16 lg:pt-0">
             {/* Sidebar Header */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <button
@@ -297,9 +305,8 @@ What would you like to know about your investments today?`,
                 New Chat
               </button>
             </div>
-
             {/* Conversations List */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 min-h-0">
               <h3 className={`text-sm font-semibold mb-4 flex items-center ${
                 isDark ? 'text-gray-300' : 'text-gray-700'
               }`}>
@@ -364,9 +371,9 @@ What would you like to know about your investments today?`,
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
+          <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full min-h-0">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-transparent">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <button
@@ -403,10 +410,10 @@ What would you like to know about your investments today?`,
             </div>
 
             {/* Chat Container */}
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0 bg-transparent">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-6 py-4" style={{ minHeight: '400px' }}>
-                <div className="max-w-4xl mx-auto">
+              <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
+                <div className="mx-auto">
                   <AnimatePresence>
                     {messages.map((message) => (
                       <ChatMessage
@@ -422,7 +429,7 @@ What would you like to know about your investments today?`,
 
               {/* Quick Actions */}
               {messages.length <= 1 && (
-                <div className="max-w-4xl mx-auto px-6 py-4">
+                <div className="mx-auto px-6 py-4 w-full">
                   <div className={`p-6 rounded-2xl border ${
                     isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200'
                   }`}>
@@ -461,8 +468,8 @@ What would you like to know about your investments today?`,
               )}
 
               {/* Input */}
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="max-w-4xl mx-auto">
+              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-transparent">
+                <div className="mx-auto w-full">
                   <ChatInput
                     onSendMessage={handleSendMessage}
                     isLoading={isLoading}
@@ -474,7 +481,7 @@ What would you like to know about your investments today?`,
 
             {/* Chat Tips */}
             <div className="px-6 py-4">
-              <div className={`max-w-4xl mx-auto p-4 rounded-xl border ${
+              <div className={`mx-auto p-4 rounded-xl border ${
                 isDark ? 'bg-gray-800/30 border-gray-700' : 'bg-blue-50/50 border-blue-200'
               }`}>
                 <h3 className={`font-semibold mb-3 flex items-center ${

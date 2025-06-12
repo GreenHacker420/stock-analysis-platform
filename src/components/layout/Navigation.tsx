@@ -12,8 +12,8 @@ import {
   DocumentTextIcon,
   CogIcon,
   UserGroupIcon,
-  CurrencyRupeeIcon,
   SparklesIcon,
+  CurrencyRupeeIcon,
 } from '@heroicons/react/24/outline';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -47,25 +47,29 @@ const Navigation = () => {
         ? 'bg-gray-900 border-gray-700'
         : 'bg-white border-gray-200'
     }`}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-blue-600">
+              <Link href="/dashboard" className="text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors duration-200">
                 StockAnalyzer
               </Link>
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div className="hidden sm:ml-8 sm:flex sm:space-x-6">
               {navigation.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
+                    className={`inline-flex items-center px-3 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? `border-blue-500 ${isDark ? 'text-white' : 'text-gray-900'}`
-                        : `border-transparent ${isDark ? 'text-gray-400 hover:text-gray-200 hover:border-gray-600' : 'text-gray-500 hover:border-gray-300 hover:text-gray-700'}`
+                        ? isDark
+                          ? 'border-blue-400 text-blue-300'
+                          : 'border-blue-500 text-blue-600'
+                        : isDark
+                          ? 'border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-200'
+                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     }`}
                   >
                     <item.icon className="w-4 h-4 mr-2" />
@@ -135,8 +139,12 @@ const Navigation = () => {
                   href={item.href}
                   className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200 ${
                     isActive
-                      ? `border-blue-500 ${isDark ? 'bg-blue-900/20 text-blue-300' : 'bg-blue-50 text-blue-700'}`
-                      : `border-transparent ${isDark ? 'text-gray-400 hover:bg-gray-800 hover:border-gray-600 hover:text-gray-200' : 'text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'}`
+                      ? isDark
+                        ? 'bg-blue-900/20 border-blue-400 text-blue-300'
+                        : 'bg-blue-50 border-blue-500 text-blue-700'
+                      : isDark
+                        ? 'border-transparent text-gray-400 hover:bg-gray-800 hover:border-gray-600 hover:text-gray-200'
+                        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >

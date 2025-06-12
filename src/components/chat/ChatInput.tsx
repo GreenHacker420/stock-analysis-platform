@@ -189,19 +189,17 @@ export default function ChatInput({
       )}
 
       {/* Input Container */}
-      <div className={`flex items-end space-x-4 p-5 rounded-2xl border-2 transition-all duration-200 ${
+      <div className={`flex items-end space-x-4 p-5 rounded-2xl border-2 transition-all duration-200 shadow-lg ${
         isDark
-          ? 'bg-gray-800 border-gray-700 focus-within:border-blue-500'
-          : 'bg-white border-gray-200 focus-within:border-blue-400 shadow-lg'
+          ? 'bg-gray-800 border-gray-700 focus-within:border-blue-500 focus-within:shadow-blue-500/20'
+          : 'bg-white border-gray-200 focus-within:border-blue-400 focus-within:shadow-blue-400/20'
       }`}>
         {/* File Upload */}
         <div className="flex-shrink-0">
           <label className={`cursor-pointer p-2.5 rounded-xl transition-all duration-200 hover:scale-105 ${
-            isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-          }`}>
-            <DocumentIcon className={`w-5 h-5 ${
-              isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'
-            }`} />
+            isDark ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-300' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-600'
+          } ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <DocumentIcon className="w-5 h-5" />
             <input
               type="file"
               className="hidden"
