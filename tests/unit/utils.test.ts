@@ -9,7 +9,6 @@ import {
   formatCompactINR,
   formatPercentage,
   isIndianMarketOpen,
-  getMarketStatus,
   isMarketHoliday
 } from '../../src/lib/currencyUtils';
 
