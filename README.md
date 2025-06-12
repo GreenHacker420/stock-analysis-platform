@@ -1,92 +1,16 @@
 # Stock Analysis Platform
 
-A comprehensive AI-powered stock analysis platform built with Next.js 15, featuring intelligent portfolio analysis, real-time Indian market data integration, and role-based authentication for analysts and investors.
-
-🌐 **Live Demo**: https://stock.greenhacker.tech/
-
-## 📋 Assignment Deliverables
-
-This repository contains all deliverables for the Stock Analysis Platform Enhancement assignment:
-
-### ✅ Technical Documentation
-- **TECHNICAL_REPORT.md**: Comprehensive 1,850+ word technical report
-- **docs/api-documentation.md**: Complete API documentation
-- **docs/database-schema.md**: Database schema and design documentation
-
-### ✅ Code Implementation
-- **80%+ Test Coverage**: Comprehensive unit and integration tests
-- **Production Deployment**: Live at https://stock.greenhacker.tech/
-- **Demo Credentials**: Prominently displayed on login page
-- **Indian Market Integration**: NSE/BSE APIs with INR formatting
-- **AI-Powered Analysis**: Google Gemini 2.0 Flash integration
-
-### ✅ Demo and Presentation
-- **STOCK_PLATFORM_PRESENTATION.md**: 15-slide technical presentation
-- **Live Demo**: Accessible with demo credentials
-- **Performance Benchmarks**: Documented metrics and testing results
-
-### ✅ Repository Structure
-```
-/
-├── TECHNICAL_REPORT.md              # Technical documentation
-├── STOCK_PLATFORM_PRESENTATION.md  # Technical presentation
-├── docs/                           # Documentation directory
-│   ├── api-documentation.md        # API documentation
-│   └── database-schema.md          # Database schema docs
-├── tests/                          # Comprehensive test suite
-│   ├── unit/                       # Unit tests
-│   ├── integration/                # Integration tests
-│   ├── setup.ts                    # Test configuration
-│   └── run-tests.js               # Test runner script
-└── src/                           # Application source code
-```
+A comprehensive ChatGPT-like stock analysis platform with AI-powered insights, real-time data, and professional portfolio management tools.
 
 ## 🚀 Features
 
-### 💬 **AI Chat Interface (NEW - Assignment Feature)**
-- **ChatGPT-like Conversational Interface**: Natural language interaction for stock analysis
-- **Intelligent Context Awareness**: AI remembers conversation history and user preferences
-- **Smart Suggestions**: Auto-complete and intelligent prompt suggestions
-- **Multi-modal Input**: Text, voice recording, and file upload support
-- **Conversation Persistence**: Save and resume chat sessions across devices
-- **Real-time Analysis**: Instant AI responses with confidence scores and analysis types
-- **Stock Symbol Recognition**: Automatic detection and analysis of mentioned stocks
-- **Interactive Elements**: Clickable stock tags, copy functionality, and formatted responses
-
-### 🤖 AI-Powered Analysis (Assignment Feature)
-- **Google Gemini 2.0 Flash Integration**: Advanced AI analysis with contextual recommendations
-- **Intelligent Portfolio Analysis**: Comprehensive performance evaluation and insights
-- **Buy/Sell/Hold Recommendations**: AI-generated suggestions with confidence scores
-- **Risk Assessment**: Diversification analysis and risk scoring
-- **Market Sentiment Analysis**: Real-time market condition evaluation
-- **Technical Indicators**: RSI, MACD, SMA, EMA calculations with AI interpretation
-
-### 🇮🇳 Indian Market Integration (Assignment Feature)
-- **NSE/BSE Real-Time Data**: Live stock quotes from Indian exchanges via EODHD API
-- **INR Currency Formatting**: Proper Indian numbering system (Lakhs, Crores)
-- **Indian Stock Symbols**: Support for .NSE and .BSE suffixes
-- **Market-Specific Features**: Sector analysis and Indian market indicators
-- **Fallback Strategy**: Graceful degradation to mock data when APIs fail
-
-### 🔐 Authentication & Security (Assignment Feature)
-- **Multi-Provider Authentication**: Google OAuth and email/password with bcrypt
-- **Role-Based Access Control**: Analyst and investor user types with proper isolation
-- **Demo Credentials**: Prominently displayed for easy testing and evaluation
-- **Session Management**: JWT tokens with 30-day expiration and automatic refresh
-- **Data Protection**: Comprehensive input validation and sanitization
-
-### 📊 Portfolio Management (Assignment Feature)
-- **Real-Time Portfolio Tracking**: Live value updates and performance metrics
-- **Holdings Management**: Add, edit, and remove stock positions
-- **Performance Analytics**: Daily, weekly, monthly, and yearly returns
-- **Risk Metrics**: Volatility, Sharpe ratio, and diversification scores
-- **Database Seeding**: Automatic demo data generation on first API call
-
-### 📋 Report Generation (Assignment Feature)
-- **AI-Generated Reports**: Comprehensive analysis reports with metadata
-- **Analyst-Investor Relationships**: Managed report assignments with permissions
-- **Report History**: Complete audit trail of all analyses
-- **Validation Period**: Reports with expiration dates and status tracking
+### Core Functionality
+- **AI-Powered Analysis**: Google Gemini AI integration for intelligent stock recommendations
+- **Real-time Stock Data**: Yahoo Finance API integration for live market data
+- **Portfolio Management**: Comprehensive tracking with performance metrics
+- **Role-Based Access**: Separate interfaces for analysts and investors
+- **Technical Indicators**: RSI, MACD, SMA, EMA calculations
+- **Risk Assessment**: Portfolio diversification and concentration analysis
 
 ### 🎨 Advanced 3D Visualizations
 - **3D Portfolio Visualization**: Interactive 3D donut charts showing portfolio allocation by sector/stock with hover effects and smooth animations
@@ -121,48 +45,29 @@ This repository contains all deliverables for the Stock Analysis Platform Enhanc
 - **Interactive Charts**: Real-time data visualization
 - **Report History**: Historical analysis tracking
 
-## 🔑 Demo Credentials (Assignment Requirement)
+## 🛠 Tech Stack
 
-The platform prominently displays demo credentials on the login page for easy evaluation:
+### Backend
+- **Framework**: Next.js 15 with App Router
+- **Database**: MongoDB Atlas with Mongoose ODM
+- **Authentication**: NextAuth.js with Google OAuth
+- **AI Integration**: Google Gemini API
+- **Stock Data**: Yahoo Finance API
 
-### 👨‍💼 Analyst Account
-```
-Email: sarah.johnson@stockanalyzer.com
-Password: analyst123!
-```
-**Features**: Multi-investor management, report generation, comprehensive analytics
-
-### 👤 Investor Account
-```
-Email: john.doe@email.com
-Password: investor123!
-```
-**Features**: Portfolio management, AI analysis requests, performance tracking
-
-## 🛠 Tech Stack (Assignment Compliant)
-
-### Backend Architecture
-- **Framework**: Next.js 15 with App Router and TypeScript
-- **Database**: MongoDB Atlas with Mongoose ODM and automatic seeding
-- **Authentication**: NextAuth.js with Google OAuth and credentials
-- **AI Integration**: Google Gemini 2.0 Flash model (as specified)
-- **Stock Data**: EODHD API for Indian markets (NSE/BSE)
-- **API Design**: RESTful endpoints with comprehensive error handling
-
-### Frontend Implementation
-- **Framework**: React 19 with TypeScript for type safety
-- **Styling**: Tailwind CSS with consistent dark mode theming
-- **UI Components**: Headless UI, Heroicons for accessibility
+### Frontend
+- **Framework**: React 18 with TypeScript
+- **Styling**: Tailwind CSS with Dark Mode Support
+- **3D Graphics**: Three.js with React Three Fiber
+- **Animations**: Framer Motion for smooth transitions
+- **Charts**: D3.js, Chart.js, React-Chartjs-2
+- **UI Components**: Headless UI, Heroicons
 - **State Management**: React Hooks and Context API
-- **Charts**: Advanced visualization with Chart.js and D3.js
-- **Responsive Design**: Mobile-first approach with optimized layouts
 
-### Development & Testing
-- **Language**: TypeScript for compile-time error checking
-- **Testing**: Jest with 80%+ coverage requirement
-- **Linting**: ESLint with strict rules for code quality
-- **Package Management**: npm with proper dependency management
-- **Environment**: Node.js 18+ with environment variable management
+### Development
+- **Language**: TypeScript
+- **Linting**: ESLint
+- **Package Manager**: npm
+- **Environment**: Node.js
 
 ## 📋 Prerequisites
 
@@ -271,30 +176,64 @@ src/
 │   ├── Portfolio.ts      # Portfolio model
 │   ├── AnalysisReport.ts # Analysis report model
 │   └── UserAnalyst.ts    # User-analyst relationship
-└── types/                # TypeScript type definitions
+├── types/                # TypeScript type definitions
+├── tests/                # Test suites
+│   ├── unit/             # Unit tests
+│   ├── integration/      # Integration tests
+│   └── e2e/              # End-to-end tests
+└── docs/                 # Comprehensive documentation
+    ├── getting-started/  # Installation and setup guides
+    ├── api/              # API documentation
+    ├── architecture/     # System architecture docs
+    ├── features/         # Feature-specific guides
+    ├── deployment/       # Deployment guides
+    ├── testing/          # Testing documentation
+    ├── reports/          # Technical reports
+    └── maintenance/      # Maintenance and monitoring
 ```
 
-## 🔐 Database Schema
+## 📚 Documentation
 
-### Users Collection
-- User authentication and profile information
-- Role-based access control (analyst/investor)
-- Preferences and settings
+Comprehensive documentation is available in the `/docs` folder:
 
-### Portfolios Collection
-- Portfolio holdings and performance metrics
-- Real-time value calculations
-- Risk and diversification scores
+### 🚀 Getting Started
+- [Installation Guide](docs/getting-started/installation.md) - Complete setup instructions
+- [Configuration Guide](docs/getting-started/configuration.md) - Environment configuration
+- [Quick Start Guide](docs/getting-started/quick-start.md) - Get up and running quickly
 
-### Analysis Reports Collection
-- AI-generated analysis and recommendations
-- Technical indicators and market conditions
-- Historical report tracking
+### 🔌 API Documentation
+- [Complete API Reference](docs/api/api-documentation.md) - Full API documentation
+- [Authentication](docs/api/authentication.md) - Auth endpoints and security
+- [Portfolio Management](docs/api/portfolios.md) - Portfolio APIs
+- [Stock Data](docs/api/stocks.md) - Stock market data APIs
 
-### User-Analyst Relationships Collection
-- Many-to-many mapping between analysts and investors
-- Permission management
-- Communication preferences
+### 🏗️ Architecture
+- [System Overview](docs/architecture/system-overview.md) - High-level architecture
+- [Technical Decisions](docs/architecture/technical-decisions.md) - Architecture rationale
+- [Security Implementation](docs/architecture/security.md) - Security measures
+
+### ✨ Features
+- [AI-Powered Analysis](docs/features/ai-analysis.md) - AI capabilities and implementation
+- [Indian Market Integration](docs/features/indian-market.md) - NSE/BSE integration
+- [3D Visualizations](docs/features/3d-visualizations.md) - Advanced 3D features
+
+### 🚀 Deployment
+- [Deployment Guide](docs/deployment/deployment-guide.md) - Production deployment
+- [Environment Setup](docs/deployment/environment-setup.md) - Environment configuration
+- [Production Checklist](docs/deployment/production-checklist.md) - Pre-deployment checklist
+
+### 🧪 Testing
+- [Testing Guide](docs/testing/testing-guide.md) - Testing strategies and setup
+- [Test Coverage](docs/testing/test-coverage.md) - Coverage reports and metrics
+
+### 📊 Reports
+- [Technical Report](docs/reports/technical-report.md) - Comprehensive technical analysis
+- [Assignment Deliverables](docs/reports/assignment-deliverables.md) - Project deliverables
+
+### 🔧 Maintenance
+- [Performance Optimization](docs/maintenance/performance-optimization.md) - Performance tuning
+- [Monitoring & Logging](docs/maintenance/monitoring.md) - System monitoring
+- [Troubleshooting](docs/maintenance/troubleshooting.md) - Common issues and solutions
 
 ## 🚀 Deployment
 
@@ -333,137 +272,35 @@ Make sure to set all environment variables in your production environment:
 3. **Generate comprehensive** analysis reports
 4. **Monitor client** portfolio performance
 5. **Provide investment** recommendations
-6. **Real-time monitoring** of all assigned portfolios
-7. **Instant notifications** when analysis completes
 
-## 🔄 Real-time Features
+## 🧪 Testing
 
-### WebSocket Integration
-The platform includes comprehensive real-time functionality:
-
-- **Live Stock Updates**: Real-time price feeds for all portfolio holdings
-- **Portfolio Monitoring**: Instant portfolio value updates
-- **Analysis Notifications**: Real-time alerts when AI analysis completes
-- **Market Alerts**: Breaking news and volatility warnings
-- **Multi-user Sync**: Synchronized data across multiple sessions
-
-### Usage Example
-```typescript
-import { useStockUpdates, usePortfolioUpdates } from '@/hooks/useWebSocket'
-
-function Portfolio({ portfolioId, symbols }) {
-  const { stockUpdates, loading, error } = useStockUpdates(symbols)
-  const { portfolioUpdate } = usePortfolioUpdates(portfolioId)
-
-  // Real-time updates via polling automatically reflected in UI
-  return <PortfolioDisplay data={portfolioUpdate} stocks={stockUpdates} />
-}
-```
-
-### Server Setup
-The platform uses Next.js with intelligent polling for real-time features:
-- **Main Server** (Port 3000): Next.js application with API routes
-- **Real-time Updates**: Polling-based updates every 30 seconds
-- **API Endpoints**: RESTful APIs for all data operations
-
-Start the development server:
+Run the test suite:
 ```bash
-npm run dev  # Starts Next.js with real-time polling
+npm test
 ```
 
-## 🧪 Testing & Quality Assurance (Assignment Requirement)
-
-The platform includes comprehensive testing infrastructure meeting the 80% coverage requirement.
-
-### Test Coverage Achievement
-- ✅ **Unit Tests**: 45+ test cases covering core functionality
-- ✅ **Integration Tests**: 25+ test cases for API endpoints and data flow
-- ✅ **Component Tests**: 15+ test cases for React components
-- ✅ **Overall Coverage**: 82.5% (exceeds 80% requirement)
-
-### Running Tests
-
-Run the comprehensive test suite with detailed reporting:
+Run tests in watch mode:
 ```bash
-npm test                    # Complete test suite with coverage
-npm run test:unit          # Unit tests only
-npm run test:integration   # Integration tests only
-npm run test:components    # Component tests only
-npm run test:watch         # Watch mode for development
-npm run test:ci           # CI/CD pipeline tests
+npm run test:watch
 ```
-
-### Test Structure (Assignment Compliant)
-
-```
-tests/
-├── unit/                          # Unit tests
-│   ├── auth.test.ts              # Authentication system tests
-│   ├── stockData.test.ts         # Stock data service tests
-│   └── aiAnalysis.test.ts        # AI analysis functionality tests
-├── integration/                   # Integration tests
-│   └── api.test.ts               # Complete API workflow tests
-├── setup.ts                      # Test configuration and utilities
-└── run-tests.js                  # Custom test runner with reporting
-```
-
-### Quality Metrics
-- **Performance**: Average test duration <125ms
-- **Reliability**: 98.5% test success rate
-- **Coverage**: Lines (82%), Functions (85%), Branches (80%), Statements (83%)
-- **CI/CD**: Automated testing on all commits and deployments
 
 ## 📈 Performance Optimization
 
-### Caching Strategy
-- **Stock Data**: 5-minute cache for real-time quotes
-- **Technical Indicators**: Cached calculations to reduce computation
-- **API Responses**: Intelligent caching based on data volatility
-- **Database Queries**: Optimized with proper indexing
-
-### Rate Limiting
-- **API Protection**: Multiple rate limiters for different endpoints
-- **User-Based Limits**: Different limits for analysts vs investors
-- **Intelligent Throttling**: Adaptive limits based on usage patterns
-- **DDoS Protection**: Automatic IP blocking for abuse
-
-### Real-time Features
-- **WebSocket Integration**: Live stock price updates
-- **Portfolio Monitoring**: Real-time portfolio value changes
-- **Analysis Notifications**: Instant alerts when reports complete
-- **Market Alerts**: Breaking news and volatility warnings
-
-### Performance Monitoring
-- **Metrics Collection**: Comprehensive performance tracking
-- **API Monitoring**: Response time and error rate tracking
-- **Error Tracking**: Automatic error reporting and analysis
-- **System Health**: Memory usage and uptime monitoring
+- **Caching**: Stock data cached for 5 minutes
+- **Rate Limiting**: API calls limited to prevent abuse
+- **Database Indexing**: Optimized queries with proper indexes
+- **Image Optimization**: Next.js automatic image optimization
+- **Code Splitting**: Automatic code splitting with Next.js
 
 ## 🔒 Security Features
 
-### Authentication & Authorization
-- **OAuth Integration**: Secure Google OAuth with NextAuth.js
-- **Role-Based Access**: Granular permissions for analysts and investors
-- **Session Management**: JWT tokens with automatic expiration
-- **Multi-Factor Support**: Ready for 2FA implementation
-
-### Data Protection
-- **Input Validation**: Comprehensive data sanitization
-- **SQL Injection Prevention**: Parameterized queries and ORM protection
-- **XSS Protection**: Content Security Policy and input encoding
-- **CSRF Protection**: Token-based request validation
-
-### Infrastructure Security
-- **Rate Limiting**: Advanced DDoS and abuse protection
-- **Environment Isolation**: Secure credential management
-- **HTTPS Enforcement**: SSL/TLS encryption in production
-- **CORS Configuration**: Controlled cross-origin access
-
-### Monitoring & Compliance
-- **Error Tracking**: Comprehensive error logging and alerting
-- **Audit Trails**: Complete user action logging
-- **Data Encryption**: At-rest and in-transit encryption
-- **Privacy Controls**: GDPR-compliant data handling
+- **Authentication**: Secure OAuth with NextAuth.js
+- **Authorization**: Role-based access control
+- **Data Validation**: Input sanitization and validation
+- **Environment Variables**: Secure credential management
+- **HTTPS**: SSL/TLS encryption in production
+- **CORS**: Cross-origin request protection
 
 ## 🤝 Contributing
 
@@ -485,5 +322,6 @@ For support, email support@stockanalysis.com or create an issue in the GitHub re
 
 - [Next.js](https://nextjs.org/) for the amazing framework
 - [Google Gemini](https://ai.google.dev/) for AI capabilities
+- [Yahoo Finance](https://finance.yahoo.com/) for stock data
 - [Tailwind CSS](https://tailwindcss.com/) for styling
 - [MongoDB](https://www.mongodb.com/) for database solutions
