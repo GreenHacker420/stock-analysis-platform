@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     // Connect to database
     await connectDB()
 
-    const debugInfo = {
+    const debugInfo: any = {
       timestamp: new Date().toISOString(),
       session: session ? {
         user: {

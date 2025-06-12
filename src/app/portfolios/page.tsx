@@ -4,8 +4,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Navigation from '@/components/layout/Navigation';
+import { PlusIcon, ChartBarIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { useTheme } from '@/contexts/ThemeContext';
 import { formatINR, formatPercentage } from '@/lib/currencyUtils';
-import { PlusIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 interface Portfolio {
   _id: string;
@@ -28,8 +29,10 @@ interface Portfolio {
 export default function PortfoliosPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { isDark } = useTheme();
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generatingAnalysis, setGeneratingAnalysis] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -56,20 +59,61 @@ export default function PortfoliosPage() {
     }
   };
 
+  const handleViewDetails = (portfolioId: string) => {
+    router.push(`/portfolios/${portfolioId}`);
+  };
+
+  const handleGenerateAnalysis = async (portfolioId: string) => {
+    setGeneratingAnalysis(portfolioId);
+    try {
+      const response = await fetch('/api/analysis/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ portfolioId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Navigate to the generated report
+        router.push(`/reports/${data.report._id}`);
+      } else {
+        console.error('Failed to generate analysis');
+        alert('Failed to generate analysis. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+      alert('Error generating analysis. Please try again.');
+    } finally {
+      setGeneratingAnalysis(null);
+    }
+  };
+
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <Navigation />
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
+              <div className={`h-8 rounded w-1/4 mb-6 ${
+                isDark ? 'bg-gray-700' : 'bg-gray-300'
+              }`}></div>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow p-6">
-                    <div className="h-6 bg-gray-300 rounded w-3/4 mb-4"></div>
-                    <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-                    <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+                  <div key={i} className={`rounded-lg shadow p-6 ${
+                    isDark ? 'bg-gray-800' : 'bg-white'
+                  }`}>
+                    <div className={`h-6 rounded w-3/4 mb-4 ${
+                      isDark ? 'bg-gray-700' : 'bg-gray-300'
+                    }`}></div>
+                    <div className={`h-4 rounded w-1/2 mb-2 ${
+                      isDark ? 'bg-gray-700' : 'bg-gray-300'
+                    }`}></div>
+                    <div className={`h-4 rounded w-2/3 ${
+                      isDark ? 'bg-gray-700' : 'bg-gray-300'
+                    }`}></div>
                   </div>
                 ))}
               </div>
@@ -85,16 +129,18 @@ export default function PortfoliosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Navigation />
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className={`text-2xl font-bold ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               {session.user.role === 'analyst' ? 'Client Portfolios' : 'My Portfolios'}
             </h1>
             {session.user.role === 'investor' && (
-              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+              <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                 <PlusIcon className="w-4 h-4 mr-2" />
                 Create Portfolio
               </button>
@@ -103,17 +149,23 @@ export default function PortfoliosPage() {
 
           {portfolios.length === 0 ? (
             <div className="text-center py-12">
-              <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No portfolios</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {session.user.role === 'analyst' 
+              <ChartBarIcon className={`mx-auto h-12 w-12 ${
+                isDark ? 'text-gray-600' : 'text-gray-400'
+              }`} />
+              <h3 className={`mt-2 text-sm font-medium ${
+                isDark ? 'text-gray-200' : 'text-gray-900'
+              }`}>No portfolios</h3>
+              <p className={`mt-1 text-sm ${
+                isDark ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                {session.user.role === 'analyst'
                   ? 'No client portfolios assigned to you yet.'
                   : 'Get started by creating your first portfolio.'
                 }
               </p>
               {session.user.role === 'investor' && (
                 <div className="mt-6">
-                  <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                     <PlusIcon className="w-4 h-4 mr-2" />
                     Create Portfolio
                   </button>
@@ -123,49 +175,65 @@ export default function PortfoliosPage() {
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {portfolios.map((portfolio) => (
-                <div key={portfolio._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                <div key={portfolio._id} className={`rounded-lg shadow hover:shadow-md transition-shadow ${
+                  isDark ? 'bg-gray-800 hover:bg-gray-750' : 'bg-white'
+                }`}>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium text-gray-900 truncate">
+                      <h3 className={`text-lg font-medium truncate ${
+                        isDark ? 'text-white' : 'text-gray-900'
+                      }`}>
                         {portfolio.name}
                       </h3>
-                      <ChartBarIcon className="w-5 h-5 text-gray-400" />
+                      <ChartBarIcon className={`w-5 h-5 ${
+                        isDark ? 'text-gray-500' : 'text-gray-400'
+                      }`} />
                     </div>
-                    
+
                     {session.user.role === 'analyst' && (
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className={`text-sm mb-2 ${
+                        isDark ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
                         Client: {portfolio.investorId.name}
                       </p>
                     )}
                     
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Total Value</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {formatINR(portfolio.totalValue, { compact: true })}
-                        </span>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Gain/Loss</span>
+                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Value</span>
                         <span className={`text-sm font-medium ${
-                          portfolio.totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'
+                          isDark ? 'text-gray-200' : 'text-gray-900'
                         }`}>
-                          {formatINR(portfolio.totalGainLoss, { compact: true })} ({formatPercentage(portfolio.totalGainLossPercentage)})
+                          {formatINR(portfolio.totalValue)}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Holdings</span>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Gain/Loss</span>
+                        <span className={`text-sm font-medium ${
+                          portfolio.totalGainLoss >= 0
+                            ? (isDark ? 'text-green-400' : 'text-green-600')
+                            : (isDark ? 'text-red-400' : 'text-red-600')
+                        }`}>
+                          {formatINR(portfolio.totalGainLoss)} ({portfolio.totalGainLossPercentage.toFixed(2)}%)
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Holdings</span>
+                        <span className={`text-sm font-medium ${
+                          isDark ? 'text-gray-200' : 'text-gray-900'
+                        }`}>
                           {portfolio.holdings.length} stocks
                         </span>
                       </div>
-                      
+
                       {portfolio.lastAnalyzed && (
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-500">Last Analyzed</span>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Last Analyzed</span>
+                          <span className={`text-sm font-medium ${
+                            isDark ? 'text-gray-200' : 'text-gray-900'
+                          }`}>
                             {new Date(portfolio.lastAnalyzed).toLocaleDateString()}
                           </span>
                         </div>
