@@ -1,8 +1,8 @@
 'use client';
 
-import { signIn, getSession } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { AlertCircle, Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -11,6 +11,7 @@ function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isDark } = useTheme();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -52,30 +53,65 @@ function SignInContent() {
     }
   })();
 
+  // Show loading while checking session
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+            Loading...
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is already authenticated, redirect to dashboard
   useEffect(() => {
-    // Check if user is already signed in
-    getSession().then((session) => {
-      if (session) {
-        router.push('/dashboard');
-      }
-    });
-  }, [router]);
+    if (session?.user && session.user.isActive) {
+      console.log('User already authenticated, redirecting to dashboard');
+      router.replace('/dashboard');
+    }
+  }, [session, router]);
+
+  // If user is already authenticated, show a message while redirecting
+  if (session?.user && session.user.isActive) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+            You are already signed in. Redirecting...
+          </h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            If you are not redirected automatically, <a href="/dashboard" className="text-indigo-600 hover:text-indigo-500">click here</a>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
       const result = await signIn('google', {
         callbackUrl,
-        redirect: true, // Let NextAuth handle the redirect
+        redirect: false, // Handle redirect manually for better control
       });
 
-      if (result?.error) {
-        console.error('Sign in error:', result.error);
+      console.log('Google sign in result:', { ok: result?.ok, error: result?.error, url: result?.url });
+
+      if (result?.ok) {
+        console.log('Google sign in successful, redirecting to:', callbackUrl);
+        router.replace(callbackUrl);
+      } else if (result?.error) {
+        console.error('Google sign in error:', result.error);
         // Redirect to error page with error details
         router.push(`/auth/error?error=${result.error}`);
       }
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('Google sign in error:', error);
       router.push('/auth/error?error=Configuration');
     } finally {
       setGoogleLoading(false);
@@ -108,20 +144,27 @@ function SignInContent() {
     setLoading(true);
 
     try {
+      console.log('Attempting credentials sign in for:', formData.email);
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        callbackUrl: callbackUrl,
+        redirect: false, // Handle redirect manually for better control
       });
 
-      if (result?.error) {
+      console.log('Sign in result:', { ok: result?.ok, error: result?.error, url: result?.url });
+
+      if (result?.ok) {
+        console.log('Sign in successful, redirecting to:', callbackUrl);
+        // Successful sign-in, redirect to callback URL
+        router.replace(callbackUrl);
+      } else if (result?.error) {
+        console.error('Sign in failed:', result.error);
         setFormErrors({
           general: result.error === 'CredentialsSignin'
             ? 'Invalid email or password'
             : result.error
         });
-      } else if (result?.ok) {
-        router.push(callbackUrl);
       }
     } catch (error) {
       console.error('Sign in error:', error);

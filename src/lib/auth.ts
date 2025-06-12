@@ -90,6 +90,29 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Handle redirect after authentication
+      console.log('NextAuth redirect callback:', { url, baseUrl });
+
+      // If url is relative, make it absolute
+      if (url.startsWith('/')) {
+        const redirectUrl = `${baseUrl}${url}`;
+        console.log('Redirecting to relative URL:', redirectUrl);
+        return redirectUrl;
+      }
+
+      // If url is from the same origin, allow it
+      if (url.startsWith(baseUrl)) {
+        console.log('Redirecting to same origin URL:', url);
+        return url;
+      }
+
+      // Default to dashboard
+      const dashboardUrl = `${baseUrl}/dashboard`;
+      console.log('Defaulting to dashboard:', dashboardUrl);
+      return dashboardUrl;
+    },
+
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         try {
@@ -141,34 +164,60 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async session({ session }) {
-      if (session.user?.email) {
-        try {
-          await connectDB();
-          const user = await User.findOne({ email: session.user.email });
+    async session({ session, token }) {
+      // Use token data to populate session
+      if (token) {
+        session.user.id = token.userId as string;
+        session.user.role = token.role as 'analyst' | 'investor';
+        session.user.isActive = token.isActive as boolean;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
 
-          if (user) {
-            session.user.id = user._id.toString();
-            session.user.role = user.role;
-            session.user.isActive = user.isActive;
-          } else {
-            // If user not found, set default values
-            session.user.role = 'investor';
-            session.user.isActive = true;
-          }
-        } catch (error) {
-          console.error('Error fetching user in session:', error);
-          // Set default values on error
-          session.user.role = 'investor';
-          session.user.isActive = true;
-        }
+        console.log('Session created for user:', {
+          email: session.user.email,
+          role: session.user.role,
+          id: session.user.id,
+          isActive: session.user.isActive
+        });
       }
       return session;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
+      // On sign in, add user data to token
       if (account && user) {
         token.accessToken = account.access_token;
+        token.role = user.role;
+        token.isActive = user.isActive;
+        token.userId = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        console.log('JWT callback - storing user data in token:', {
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive
+        });
       }
+
+      // On subsequent requests, ensure user data is still in token
+      if (trigger === 'update' || !token.role) {
+        try {
+          await connectDB();
+          const dbUser = await User.findOne({
+            email: token.email,
+            isActive: true
+          });
+
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.isActive = dbUser.isActive;
+            token.userId = dbUser._id.toString();
+            token.name = dbUser.name;
+          }
+        } catch (error) {
+          console.error('Error updating token from database:', error);
+        }
+      }
+
       return token;
     },
   },
@@ -183,18 +232,6 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
   useSecureCookies: process.env.NODE_ENV === 'production',
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.greenhacker.tech' : undefined,
-      },
-    },
-  },
   events: {
     async signIn({ user, account }) {
       console.log('User signed in:', { email: user.email, provider: account?.provider });
@@ -217,9 +254,17 @@ declare module 'next-auth' {
       isActive: boolean;
     };
   }
-  
+
   interface User {
     role: 'analyst' | 'investor';
     isActive: boolean;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    role?: 'analyst' | 'investor';
+    isActive?: boolean;
+    userId?: string;
   }
 }

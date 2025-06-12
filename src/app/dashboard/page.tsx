@@ -14,9 +14,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (status === 'loading') return; // Still loading
-    
+
     if (!session) {
-      router.push('/');
+      console.log('No session found, redirecting to signin');
+      router.replace('/auth/signin');
+    } else {
+      console.log('Dashboard loaded for user:', {
+        email: session.user?.email,
+        role: session.user?.role
+      });
     }
   }, [session, status, router]);
 
@@ -37,7 +43,7 @@ export default function DashboardPage() {
       isDark ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
       <Navigation />
-      <main className="max-w-[1600px] mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <DashboardOverview />
         </div>
