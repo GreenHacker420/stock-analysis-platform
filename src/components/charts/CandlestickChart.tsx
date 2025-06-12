@@ -43,6 +43,7 @@ export default function CandlestickChart({
 }: CandlestickChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const { isDark } = useTheme();
   const [selectedIndicators, setSelectedIndicators] = useState<string[]>(['sma20']);
   const [timeRange, setTimeRange] = useState(selectedPeriod);
@@ -117,21 +118,23 @@ export default function CandlestickChart({
       .on("zoom", (event) => {
         const { transform } = event;
         setIsZoomed(transform.k > 1);
-        
+
         const newXScale = transform.rescaleX(xScale);
-        
+
         // Update candlesticks
         g.selectAll(".candlestick")
           .attr("transform", d => `translate(${newXScale((d as CandlestickData).date)},0)`);
-        
+
         // Update volume bars
         g.selectAll(".volume-bar")
           .attr("transform", d => `translate(${newXScale((d as CandlestickData).date)},0)`);
-        
+
         // Update axes
         g.select(".x-axis").call(d3.axisBottom(newXScale) as any);
       });
 
+    // Store zoom behavior for reset functionality
+    zoomRef.current = zoom;
     svg.call(zoom);
 
     // Candlesticks
@@ -458,12 +461,11 @@ export default function CandlestickChart({
           {isZoomed && (
             <button
               onClick={() => {
-                const svg = d3.select(svgRef.current);
-                svg.transition().duration(300).call(
-                  d3.zoom<SVGSVGElement, unknown>().transform,
-                  d3.zoomIdentity
-                );
-                setIsZoomed(false);
+                if (svgRef.current && zoomRef.current) {
+                  const svg = d3.select(svgRef.current);
+                  svg.call(zoomRef.current.transform, d3.zoomIdentity);
+                  setIsZoomed(false);
+                }
               }}
               className={`absolute top-4 right-4 px-3 py-1 text-xs font-medium rounded ${
                 isDark
