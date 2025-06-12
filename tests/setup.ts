@@ -3,45 +3,6 @@
  * Global test utilities and mocks
  */
 
-import '@testing-library/jest-dom';
-
-// Mock Next.js router
-jest.mock('next/router', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    pathname: '/',
-    query: {},
-    asPath: '/',
-  }),
-}));
-
-// Mock Next.js navigation
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    pathname: '/',
-    query: {},
-    asPath: '/',
-  }),
-  useSearchParams: () => ({
-    get: jest.fn(),
-  }),
-  usePathname: () => '/',
-}));
-
-// Mock NextAuth
-jest.mock('next-auth/react', () => ({
-  useSession: () => ({
-    data: null,
-    status: 'unauthenticated',
-  }),
-  signIn: jest.fn(),
-  signOut: jest.fn(),
-  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 // Mock environment variables
 process.env.NEXTAUTH_SECRET = 'test-secret';
 process.env.NEXTAUTH_URL = 'http://localhost:3000';
