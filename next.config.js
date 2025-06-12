@@ -12,13 +12,9 @@ const nextConfig = {
   },
   // External packages for server components
   serverExternalPackages: ['mongoose'],
-  // Disable static optimization for problematic pages
+  // Experimental features
   experimental: {
-    // Remove invalid option
-  },
-  // Skip static generation for error pages
-  generateBuildId: async () => {
-    return 'build-' + Date.now()
+    // Add any experimental features here if needed
   },
   // Handle environment variables
   env: {
@@ -27,10 +23,9 @@ const nextConfig = {
   // Image optimization
   images: {
     domains: ['localhost', 'via.placeholder.com'],
-    unoptimized: true, // For static export if needed
+    unoptimized: false, // Enable optimization for Vercel
   },
-  // Output configuration for deployment
-  output: 'standalone', // For Docker/serverless deployment
+  // Remove output: 'standalone' for Vercel compatibility
   // Disable x-powered-by header
   poweredByHeader: false,
   // Compression
