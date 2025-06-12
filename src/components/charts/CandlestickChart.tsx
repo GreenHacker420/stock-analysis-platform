@@ -179,13 +179,17 @@ export default function CandlestickChart({
         switch (indicator) {
           case 'sma20':
             if (indicators.sma20) {
-              const line = d3.line<number>()
-                .x((d, i) => xScale(filteredData[i].date))
-                .y(d => yScale(d))
+              const line = d3.line<[Date, number]>()
+                .x(d => xScale(d[0]))
+                .y(d => yScale(d[1]))
+                .defined(d => d[1] !== null)
                 .curve(d3.curveMonotoneX);
 
+              const sma20Data = filteredData.map((d, i) => [d.date, indicators.sma20![i]] as [Date, number])
+                .filter(d => d[1] !== null);
+
               g.append("path")
-                .datum(indicators.sma20)
+                .datum(sma20Data)
                 .attr("fill", "none")
                 .attr("stroke", "#f59e0b")
                 .attr("stroke-width", 2)
@@ -194,13 +198,17 @@ export default function CandlestickChart({
             break;
           case 'sma50':
             if (indicators.sma50) {
-              const line = d3.line<number>()
-                .x((d, i) => xScale(filteredData[i].date))
-                .y(d => yScale(d))
+              const line = d3.line<[Date, number]>()
+                .x(d => xScale(d[0]))
+                .y(d => yScale(d[1]))
+                .defined(d => d[1] !== null)
                 .curve(d3.curveMonotoneX);
 
+              const sma50Data = filteredData.map((d, i) => [d.date, indicators.sma50![i]] as [Date, number])
+                .filter(d => d[1] !== null);
+
               g.append("path")
-                .datum(indicators.sma50)
+                .datum(sma50Data)
                 .attr("fill", "none")
                 .attr("stroke", "#8b5cf6")
                 .attr("stroke-width", 2)
@@ -209,14 +217,17 @@ export default function CandlestickChart({
             break;
           case 'bollinger':
             if (indicators.bollinger) {
-              const line = d3.line<number>()
-                .x((d, i) => xScale(filteredData[i].date))
-                .y(d => yScale(d))
+              const line = d3.line<[Date, number]>()
+                .x(d => xScale(d[0]))
+                .y(d => yScale(d[1]))
+                .defined(d => d[1] !== null)
                 .curve(d3.curveMonotoneX);
 
               // Upper band
+              const upperData = filteredData.map((d, i) => [d.date, indicators.bollinger!.upper[i]] as [Date, number])
+                .filter(d => d[1] !== null);
               g.append("path")
-                .datum(indicators.bollinger.upper)
+                .datum(upperData)
                 .attr("fill", "none")
                 .attr("stroke", "#06b6d4")
                 .attr("stroke-width", 1)
@@ -224,8 +235,10 @@ export default function CandlestickChart({
                 .attr("d", line);
 
               // Lower band
+              const lowerData = filteredData.map((d, i) => [d.date, indicators.bollinger!.lower[i]] as [Date, number])
+                .filter(d => d[1] !== null);
               g.append("path")
-                .datum(indicators.bollinger.lower)
+                .datum(lowerData)
                 .attr("fill", "none")
                 .attr("stroke", "#06b6d4")
                 .attr("stroke-width", 1)
@@ -233,8 +246,10 @@ export default function CandlestickChart({
                 .attr("d", line);
 
               // Middle band
+              const middleData = filteredData.map((d, i) => [d.date, indicators.bollinger!.middle[i]] as [Date, number])
+                .filter(d => d[1] !== null);
               g.append("path")
-                .datum(indicators.bollinger.middle)
+                .datum(middleData)
                 .attr("fill", "none")
                 .attr("stroke", "#06b6d4")
                 .attr("stroke-width", 2)
@@ -352,6 +367,51 @@ export default function CandlestickChart({
     { key: 'macd', label: 'MACD', color: '#10b981' }
   ];
 
+  // Show loading state if no data
+  if (!data || data.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className={`relative ${className}`}
+      >
+        <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
+          isDark
+            ? 'bg-gray-900/80 border-gray-700'
+            : 'bg-white/80 border-gray-200'
+        }`}>
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className={`text-lg font-semibold ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              {symbol} Price Chart
+            </h3>
+            <p className={`text-sm ${
+              isDark ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              Interactive candlestick chart with technical indicators
+            </p>
+          </div>
+          <div className="flex items-center justify-center" style={{ height: height }}>
+            <div className="text-center">
+              <div className={`text-lg font-medium ${
+                isDark ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                Loading chart data...
+              </div>
+              <div className={`text-sm mt-2 ${
+                isDark ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                Please wait while we fetch the latest market data
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -360,8 +420,8 @@ export default function CandlestickChart({
       className={`relative ${className}`}
     >
       <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
-        isDark 
-          ? 'bg-gray-900/80 border-gray-700' 
+        isDark
+          ? 'bg-gray-900/80 border-gray-700'
           : 'bg-white/80 border-gray-200'
       }`}>
         {/* Header with controls */}

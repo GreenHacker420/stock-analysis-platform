@@ -106,7 +106,6 @@ function PyramidLevel({
         color={isDark ? '#ffffff' : '#000000'}
         anchorX="center"
         anchorY="middle"
-        font="/fonts/inter-bold.woff"
       >
         {data.level}
       </Text>

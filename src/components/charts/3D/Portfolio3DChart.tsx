@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Text, Html } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/contexts/ThemeContext';
 import { formatINR } from '@/lib/currencyUtils';
 import * as THREE from 'three';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import Chart2DFallback from '@/components/charts/fallbacks/Chart2DFallback';
+import WebGLDiagnostic from '@/components/debug/WebGLDiagnostic';
 
 interface PortfolioData {
   symbol: string;
@@ -150,7 +153,6 @@ function Scene({ data, isDark }: { data: PortfolioData[]; isDark: boolean }) {
         color={isDark ? '#ffffff' : '#000000'}
         anchorX="center"
         anchorY="middle"
-        font="/fonts/inter-bold.woff"
       >
         Portfolio
       </Text>
@@ -167,8 +169,41 @@ function Scene({ data, isDark }: { data: PortfolioData[]; isDark: boolean }) {
   );
 }
 
+// Loading component for Suspense
+function Portfolio3DLoading({ isDark }: { isDark: boolean }) {
+  return (
+    <div className="h-96 w-full flex items-center justify-center">
+      <div className={`text-center ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current mx-auto mb-2"></div>
+        <p className="text-sm">Loading 3D Portfolio Chart...</p>
+      </div>
+    </div>
+  );
+}
+
+// Error fallback component
+function Portfolio3DError({ data, totalValue, isDark, onRetry }: {
+  data: PortfolioData[];
+  totalValue: number;
+  isDark: boolean;
+  onRetry?: () => void;
+}) {
+  return (
+    <Chart2DFallback
+      title="Portfolio Allocation"
+      data={data}
+      onRetry={onRetry}
+      type="portfolio"
+      className="h-96"
+    />
+  );
+}
+
 export default function Portfolio3DChart({ data, totalValue, className = '' }: Portfolio3DChartProps) {
   const { isDark } = useTheme();
+  const [hasError, setHasError] = useState(false);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [webglSupported, setWebglSupported] = useState<boolean | null>(null);
 
   const processedData = useMemo(() => {
     return data.map((item, index) => ({
@@ -178,59 +213,244 @@ export default function Portfolio3DChart({ data, totalValue, className = '' }: P
     }));
   }, [data, totalValue]);
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`relative ${className}`}
-    >
-      <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
-        isDark 
-          ? 'bg-gray-900/80 border-gray-700' 
-          : 'bg-white/80 border-gray-200'
-      }`}>
-        <div className="p-4">
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>
-            Portfolio Allocation
-          </h3>
-          <p className={`text-sm ${
-            isDark ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Total Value: {formatINR(totalValue, { compact: true })}
-          </p>
-        </div>
-        
-        <div className="h-96 w-full">
-          <Canvas
-            camera={{ position: [0, 0, 5], fov: 50 }}
-            style={{ background: isDark ? '#1f2937' : '#f9fafb' }}
-          >
-            <Scene data={processedData} isDark={isDark} />
-          </Canvas>
-        </div>
-        
-        {/* Legend */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-            {processedData.map((item) => (
-              <div key={item.symbol} className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className={`text-xs ${
-                  isDark ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  {item.symbol} ({item.percentage.toFixed(1)}%)
-                </span>
-              </div>
-            ))}
+  // Check WebGL support on mount
+  useEffect(() => {
+    const checkWebGL = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+        if (!gl || !(gl instanceof WebGLRenderingContext)) {
+          console.warn('WebGL not supported, falling back to 2D chart');
+          setWebglSupported(false);
+          setHasError(true);
+          return;
+        }
+
+        setWebglSupported(true);
+      } catch (error) {
+        console.error('WebGL check failed:', error);
+        setWebglSupported(false);
+        setHasError(true);
+      }
+    };
+
+    checkWebGL();
+  }, []);
+
+  const handleRetry = () => {
+    setHasError(false);
+    // Re-check WebGL support
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) {
+      setHasError(true);
+    }
+  };
+
+  const toggleDiagnostic = () => {
+    setShowDiagnostic(!showDiagnostic);
+  };
+
+  // Check if data is valid
+  if (!data || data.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className={`relative ${className}`}
+      >
+        <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
+          isDark
+            ? 'bg-gray-900/80 border-gray-700'
+            : 'bg-white/80 border-gray-200'
+        }`}>
+          <div className="p-4">
+            <h3 className={`text-lg font-semibold mb-2 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              Portfolio Allocation
+            </h3>
+            <p className={`text-sm ${
+              isDark ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              Total Value: {formatINR(totalValue, { compact: true })}
+            </p>
+          </div>
+          <div className="h-96 w-full flex items-center justify-center">
+            <div className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p>No portfolio data available</p>
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className={`relative ${className}`}
+      >
+        <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
+          isDark
+            ? 'bg-gray-900/80 border-gray-700'
+            : 'bg-white/80 border-gray-200'
+        }`}>
+          <div className="p-4">
+            <h3 className={`text-lg font-semibold mb-2 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              Portfolio Allocation
+            </h3>
+            <p className={`text-sm ${
+              isDark ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              Total Value: {formatINR(totalValue, { compact: true })}
+            </p>
+          </div>
+
+          <Portfolio3DError
+            data={processedData}
+            totalValue={totalValue}
+            isDark={isDark}
+            onRetry={handleRetry}
+          />
+
+          {/* Diagnostic Toggle */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={toggleDiagnostic}
+              className={`text-xs px-3 py-1 rounded transition-colors ${
+                isDark
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {showDiagnostic ? 'Hide' : 'Show'} WebGL Diagnostic
+            </button>
+
+            {showDiagnostic && (
+              <div className="mt-3">
+                <WebGLDiagnostic />
+              </div>
+            )}
+          </div>
+
+          {/* Legend */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+              {processedData.map((item) => (
+                <div key={item.symbol} className="flex items-center space-x-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className={`text-xs ${
+                    isDark ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    {item.symbol} ({item.percentage.toFixed(1)}%)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <ErrorBoundary
+      fallback={
+        <Portfolio3DError
+          data={processedData}
+          totalValue={totalValue}
+          isDark={isDark}
+          onRetry={handleRetry}
+        />
+      }
+      onError={(error) => {
+        console.error('Portfolio3DChart error:', error);
+        setHasError(true);
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className={`relative ${className}`}
+      >
+        <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
+          isDark
+            ? 'bg-gray-900/80 border-gray-700'
+            : 'bg-white/80 border-gray-200'
+        }`}>
+          <div className="p-4">
+            <h3 className={`text-lg font-semibold mb-2 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
+              Portfolio Allocation
+            </h3>
+            <p className={`text-sm ${
+              isDark ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              Total Value: {formatINR(totalValue, { compact: true })}
+            </p>
+          </div>
+
+          <div className="h-96 w-full">
+            <Suspense fallback={<Portfolio3DLoading isDark={isDark} />}>
+              <Canvas
+                camera={{ position: [0, 0, 5], fov: 50 }}
+                style={{ background: isDark ? '#1f2937' : '#f9fafb' }}
+                onCreated={({ gl }) => {
+                  // Handle WebGL context loss
+                  gl.domElement.addEventListener('webglcontextlost', (event) => {
+                    event.preventDefault();
+                    console.warn('WebGL context lost in Portfolio3DChart. Attempting to restore...');
+                    setHasError(true);
+                  });
+
+                  gl.domElement.addEventListener('webglcontextrestored', () => {
+                    console.log('WebGL context restored in Portfolio3DChart.');
+                    setHasError(false);
+                  });
+                }}
+                onError={(error) => {
+                  console.error('Canvas error in Portfolio3DChart:', error);
+                  setHasError(true);
+                }}
+              >
+                <Scene data={processedData} isDark={isDark} />
+              </Canvas>
+            </Suspense>
+          </div>
+
+          {/* Legend */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+              {processedData.map((item) => (
+                <div key={item.symbol} className="flex items-center space-x-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className={`text-xs ${
+                    isDark ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    {item.symbol} ({item.percentage.toFixed(1)}%)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </ErrorBoundary>
   );
 }

@@ -130,6 +130,130 @@ const DashboardOverview = () => {
     { stock1: 'GOOGL', stock2: 'TSLA', correlation: 0.15, significance: 'low' as const }
   ];
 
+  // Generate realistic candlestick data for AAPL
+  const generateCandlestickData = () => {
+    const data = [];
+    let basePrice = 175.43; // Starting price for AAPL
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 365); // Start from 1 year ago
+
+    for (let i = 0; i < 365; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+
+      // Skip weekends
+      if (date.getDay() === 0 || date.getDay() === 6) {
+        continue;
+      }
+
+      const open = basePrice;
+
+      // Generate realistic price movement
+      const volatility = 0.02; // 2% daily volatility
+      const trend = 0.0002; // Slight upward trend
+      const randomChange = (Math.random() - 0.5) * 2 * volatility;
+      const priceChange = trend + randomChange;
+
+      const close = open * (1 + priceChange);
+      const high = Math.max(open, close) * (1 + Math.random() * 0.01);
+      const low = Math.min(open, close) * (1 - Math.random() * 0.01);
+      const volume = Math.floor(Math.random() * 100000000) + 50000000; // 50M to 150M volume
+
+      data.push({
+        date,
+        open: Number(open.toFixed(2)),
+        high: Number(high.toFixed(2)),
+        low: Number(low.toFixed(2)),
+        close: Number(close.toFixed(2)),
+        volume
+      });
+
+      basePrice = close; // Use close as next day's base
+    }
+
+    return data;
+  };
+
+  const sampleCandlestickData = generateCandlestickData();
+
+  // Generate technical indicators
+  const generateTechnicalIndicators = (data: any[]) => {
+    if (!data.length) return {};
+
+    const closes = data.map(d => d.close);
+
+    // Simple Moving Averages
+    const sma20 = [];
+    const sma50 = [];
+
+    for (let i = 0; i < closes.length; i++) {
+      if (i >= 19) {
+        const sum20 = closes.slice(i - 19, i + 1).reduce((a, b) => a + b, 0);
+        sma20.push(sum20 / 20);
+      } else {
+        sma20.push(null);
+      }
+
+      if (i >= 49) {
+        const sum50 = closes.slice(i - 49, i + 1).reduce((a, b) => a + b, 0);
+        sma50.push(sum50 / 50);
+      } else {
+        sma50.push(null);
+      }
+    }
+
+    // Bollinger Bands (20-period, 2 standard deviations)
+    const bollinger = { upper: [], middle: [], lower: [] };
+
+    for (let i = 0; i < closes.length; i++) {
+      if (i >= 19) {
+        const slice = closes.slice(i - 19, i + 1);
+        const mean = slice.reduce((a, b) => a + b, 0) / 20;
+        const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / 20;
+        const stdDev = Math.sqrt(variance);
+
+        bollinger.middle.push(mean);
+        bollinger.upper.push(mean + (2 * stdDev));
+        bollinger.lower.push(mean - (2 * stdDev));
+      } else {
+        bollinger.middle.push(null);
+        bollinger.upper.push(null);
+        bollinger.lower.push(null);
+      }
+    }
+
+    // RSI (14-period)
+    const rsi = [];
+    const gains = [];
+    const losses = [];
+
+    for (let i = 1; i < closes.length; i++) {
+      const change = closes[i] - closes[i - 1];
+      gains.push(change > 0 ? change : 0);
+      losses.push(change < 0 ? Math.abs(change) : 0);
+    }
+
+    for (let i = 0; i < closes.length; i++) {
+      if (i >= 14) {
+        const avgGain = gains.slice(i - 14, i).reduce((a, b) => a + b, 0) / 14;
+        const avgLoss = losses.slice(i - 14, i).reduce((a, b) => a + b, 0) / 14;
+        const rs = avgGain / (avgLoss || 1);
+        rsi.push(100 - (100 / (1 + rs)));
+      } else {
+        rsi.push(null);
+      }
+    }
+
+    return {
+      sma20,
+      sma50,
+      bollinger,
+      rsi
+    };
+  };
+
+  const sampleTechnicalIndicators = generateTechnicalIndicators(sampleCandlestickData);
+
   if (loading) {
     return (
       <div className="animate-pulse">
@@ -339,7 +463,8 @@ const DashboardOverview = () => {
         {activeTab === 'advanced-charts' && (
           <div className="space-y-8">
             <CandlestickChart
-              data={[]}
+              data={sampleCandlestickData}
+              indicators={sampleTechnicalIndicators}
               symbol="AAPL"
               height={500}
             />

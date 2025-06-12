@@ -116,53 +116,107 @@ export default function Chart2DFallback({
 // Portfolio fallback component
 function PortfolioFallback({ data, isDark }: { data: unknown[]; isDark: boolean }) {
   const portfolioData = data as Array<{ symbol: string; percentage: number; color: string; value: number }>;
-  
+
   if (!portfolioData || portfolioData.length === 0) {
     return <GenericFallback isDark={isDark} />;
   }
 
   return (
-    <div className="w-full space-y-3">
-      <div className="text-center mb-4">
+    <div className="w-full space-y-4">
+      <div className="text-center mb-6">
         <div className={`text-lg font-semibold ${
           isDark ? 'text-gray-200' : 'text-gray-800'
         }`}>
           Portfolio Allocation
         </div>
+        <div className={`text-sm mt-1 ${
+          isDark ? 'text-gray-400' : 'text-gray-500'
+        }`}>
+          2D Representation
+        </div>
       </div>
-      
-      {/* Simple bar chart representation */}
-      <div className="space-y-2">
+
+      {/* Donut chart representation using CSS */}
+      <div className="flex justify-center mb-6">
+        <div className="relative w-48 h-48">
+          {/* Background circle */}
+          <div className={`absolute inset-0 rounded-full border-8 ${
+            isDark ? 'border-gray-700' : 'border-gray-200'
+          }`}></div>
+
+          {/* Segments */}
+          {portfolioData.slice(0, 6).map((item, index) => {
+            const startAngle = portfolioData.slice(0, index).reduce((sum, prev) => sum + (prev.percentage * 3.6), 0);
+            const endAngle = startAngle + (item.percentage * 3.6);
+
+            return (
+              <motion.div
+                key={item.symbol}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.2, duration: 0.5 }}
+                className="absolute inset-0"
+                style={{
+                  background: `conic-gradient(from ${startAngle}deg, ${item.color} 0deg, ${item.color} ${item.percentage * 3.6}deg, transparent ${item.percentage * 3.6}deg)`,
+                  borderRadius: '50%',
+                  mask: 'radial-gradient(circle at center, transparent 60px, black 60px)',
+                  WebkitMask: 'radial-gradient(circle at center, transparent 60px, black 60px)',
+                }}
+              />
+            );
+          })}
+
+          {/* Center text */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className={`text-sm font-semibold ${
+                isDark ? 'text-gray-200' : 'text-gray-800'
+              }`}>
+                Portfolio
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legend with bars */}
+      <div className="space-y-3">
         {portfolioData.slice(0, 6).map((item, index) => (
           <motion.div
             key={item.symbol}
-            initial={{ width: 0 }}
-            animate={{ width: `${item.percentage}%` }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className="relative"
+            className="flex items-center space-x-3"
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className={`text-xs font-medium ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
+            <div
+              className="w-4 h-4 rounded-full flex-shrink-0"
+              style={{ backgroundColor: item.color }}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className={`text-sm font-medium truncate ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {item.symbol}
+                </span>
+                <span className={`text-sm font-semibold ${
+                  isDark ? 'text-gray-200' : 'text-gray-800'
+                }`}>
+                  {item.percentage.toFixed(1)}%
+                </span>
+              </div>
+              <div className={`h-2 rounded-full ${
+                isDark ? 'bg-gray-700' : 'bg-gray-200'
               }`}>
-                {item.symbol}
-              </span>
-              <span className={`text-xs ${
-                isDark ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                {item.percentage.toFixed(1)}%
-              </span>
-            </div>
-            <div className={`h-3 rounded-full ${
-              isDark ? 'bg-gray-700' : 'bg-gray-200'
-            }`}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ 
-                  width: `${item.percentage}%`,
-                  backgroundColor: item.color 
-                }}
-              />
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${item.percentage}%` }}
+                  transition={{ delay: index * 0.1 + 0.3, duration: 0.8, ease: "easeOut" }}
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+              </div>
             </div>
           </motion.div>
         ))}
