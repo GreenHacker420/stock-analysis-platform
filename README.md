@@ -43,6 +43,16 @@ This repository contains all deliverables for the Stock Analysis Platform Enhanc
 
 ## 🚀 Features
 
+### 💬 **AI Chat Interface (NEW - Assignment Feature)**
+- **ChatGPT-like Conversational Interface**: Natural language interaction for stock analysis
+- **Intelligent Context Awareness**: AI remembers conversation history and user preferences
+- **Smart Suggestions**: Auto-complete and intelligent prompt suggestions
+- **Multi-modal Input**: Text, voice recording, and file upload support
+- **Conversation Persistence**: Save and resume chat sessions across devices
+- **Real-time Analysis**: Instant AI responses with confidence scores and analysis types
+- **Stock Symbol Recognition**: Automatic detection and analysis of mentioned stocks
+- **Interactive Elements**: Clickable stock tags, copy functionality, and formatted responses
+
 ### 🤖 AI-Powered Analysis (Assignment Feature)
 - **Google Gemini 2.0 Flash Integration**: Advanced AI analysis with contextual recommendations
 - **Intelligent Portfolio Analysis**: Comprehensive performance evaluation and insights

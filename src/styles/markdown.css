@@ -1,0 +1,322 @@
+/* Markdown Styles for Chat Messages */
+
+/* Base prose styles */
+.prose {
+  max-width: none;
+}
+
+.prose p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Headers */
+.prose h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+}
+
+.prose h1:first-child {
+  margin-top: 0;
+}
+
+.prose h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.prose h2:first-child {
+  margin-top: 0;
+}
+
+.prose h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.prose h3:first-child {
+  margin-top: 0;
+}
+
+.prose h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.prose h4:first-child {
+  margin-top: 0;
+}
+
+/* Lists */
+.prose ul {
+  margin-bottom: 0.75rem;
+  padding-left: 1rem;
+}
+
+.prose ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1rem;
+}
+
+.prose li {
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.prose li:last-child {
+  margin-bottom: 0;
+}
+
+/* Code */
+.prose code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875em;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+}
+
+.prose pre {
+  margin-bottom: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.prose pre code {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Tables */
+.prose table {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.prose th {
+  padding: 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid;
+}
+
+.prose td {
+  padding: 0.5rem;
+  border-bottom: 1px solid;
+}
+
+/* Blockquotes */
+.prose blockquote {
+  margin-bottom: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 4px solid;
+  font-style: italic;
+}
+
+.prose blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+.prose blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Links */
+.prose a {
+  text-decoration: underline;
+  transition: all 0.2s ease;
+}
+
+.prose a:hover {
+  text-decoration: none;
+}
+
+/* Strong and emphasis */
+.prose strong {
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+/* Horizontal rules */
+.prose hr {
+  margin: 1rem 0;
+  border: none;
+  border-top: 1px solid;
+}
+
+/* Financial formatting */
+.prose .currency {
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.prose .percentage {
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.prose .stock-symbol {
+  font-weight: 500;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+/* Dark theme adjustments */
+.dark .prose {
+  color: rgb(229, 231, 235);
+}
+
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4 {
+  color: rgb(255, 255, 255);
+}
+
+.dark .prose code {
+  background-color: rgb(55, 65, 81);
+  color: rgb(229, 231, 235);
+}
+
+.dark .prose pre {
+  background-color: rgb(55, 65, 81);
+  color: rgb(229, 231, 235);
+}
+
+.dark .prose th {
+  border-bottom-color: rgb(75, 85, 99);
+  color: rgb(229, 231, 235);
+}
+
+.dark .prose td {
+  border-bottom-color: rgb(75, 85, 99);
+  color: rgb(209, 213, 219);
+}
+
+.dark .prose blockquote {
+  border-left-color: rgb(59, 130, 246);
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgb(147, 197, 253);
+}
+
+.dark .prose a {
+  color: rgb(96, 165, 250);
+}
+
+.dark .prose a:hover {
+  color: rgb(147, 197, 253);
+}
+
+.dark .prose hr {
+  border-top-color: rgb(75, 85, 99);
+}
+
+.dark .prose .stock-symbol {
+  background-color: rgb(55, 65, 81);
+  color: rgb(229, 231, 235);
+}
+
+/* Light theme adjustments */
+.prose {
+  color: rgb(55, 65, 81);
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: rgb(17, 24, 39);
+}
+
+.prose code {
+  background-color: rgb(243, 244, 246);
+  color: rgb(55, 65, 81);
+}
+
+.prose pre {
+  background-color: rgb(243, 244, 246);
+  color: rgb(55, 65, 81);
+}
+
+.prose th {
+  border-bottom-color: rgb(209, 213, 219);
+  color: rgb(55, 65, 81);
+}
+
+.prose td {
+  border-bottom-color: rgb(229, 231, 235);
+  color: rgb(75, 85, 99);
+}
+
+.prose blockquote {
+  border-left-color: rgb(59, 130, 246);
+  background-color: rgb(239, 246, 255);
+  color: rgb(30, 64, 175);
+}
+
+.prose a {
+  color: rgb(37, 99, 235);
+}
+
+.prose a:hover {
+  color: rgb(29, 78, 216);
+}
+
+.prose hr {
+  border-top-color: rgb(209, 213, 219);
+}
+
+.prose .stock-symbol {
+  background-color: rgb(243, 244, 246);
+  color: rgb(55, 65, 81);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .prose {
+    font-size: 0.875rem;
+  }
+  
+  .prose h1 {
+    font-size: 1.125rem;
+  }
+  
+  .prose h2 {
+    font-size: 1rem;
+  }
+  
+  .prose h3 {
+    font-size: 0.875rem;
+  }
+  
+  .prose table {
+    font-size: 0.75rem;
+  }
+  
+  .prose th,
+  .prose td {
+    padding: 0.25rem;
+  }
+}

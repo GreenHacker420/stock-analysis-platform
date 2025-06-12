@@ -13,6 +13,7 @@ import {
   CogIcon,
   UserGroupIcon,
   CurrencyRupeeIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -25,6 +26,7 @@ const Navigation = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+    { name: 'AI Chat', href: '/chat', icon: SparklesIcon },
     { name: 'Portfolios', href: '/portfolios', icon: ChartBarIcon },
     { name: 'Reports', href: '/reports', icon: DocumentTextIcon },
     { name: 'Stocks', href: '/stocks', icon: CurrencyRupeeIcon },
