@@ -239,13 +239,39 @@ export default function PortfoliosPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="mt-6 flex space-x-3">
-                      <button className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded-md hover:bg-blue-700">
+                      <button
+                        onClick={() => handleViewDetails(portfolio._id)}
+                        className="flex-1 bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                      >
                         View Details
                       </button>
-                      <button className="flex-1 bg-gray-100 text-gray-700 text-sm font-medium py-2 px-3 rounded-md hover:bg-gray-200">
-                        Generate Analysis
+                      <button
+                        onClick={() => handleGenerateAnalysis(portfolio._id)}
+                        disabled={generatingAnalysis === portfolio._id}
+                        className={`flex-1 inline-flex justify-center items-center text-sm font-medium py-2 px-3 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                          generatingAnalysis === portfolio._id
+                            ? 'bg-blue-400 text-white cursor-not-allowed'
+                            : isDark
+                              ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        } ${isDark ? 'focus:ring-offset-gray-800' : 'focus:ring-offset-white'}`}
+                      >
+                        {generatingAnalysis === portfolio._id ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <SparklesIcon className="w-4 h-4 mr-1" />
+                            Generate Analysis
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
