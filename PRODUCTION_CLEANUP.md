@@ -91,7 +91,7 @@ NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=your-secure-secret
 
 # Stock API
-EODHD_API_KEY=6848fa019edce9.81077823
+EODHD_API_KEY=your-key
 
 # Optional
 GEMINI_API_KEY=your-gemini-key
