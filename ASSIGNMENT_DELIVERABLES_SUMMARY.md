@@ -3,7 +3,6 @@
 
 **Student**: Harsh Hirawat  
 **Assignment**: Stock Analysis Platform Development  
-**Submission Date**: January 2025  
 **Production URL**: https://stock.greenhacker.tech/
 
 ---
@@ -233,7 +232,6 @@ stock-analysis-platform/
 **Student**: Harsh Hirawat  
 **Repository**: https://github.com/greenhacker420/stock-analysis-platform  
 **Live Demo**: https://stock.greenhacker.tech/  
-**Submission Date**: January 2025
 
 ---
 
