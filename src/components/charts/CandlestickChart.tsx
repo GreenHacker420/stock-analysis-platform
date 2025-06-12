@@ -28,20 +28,24 @@ interface CandlestickChartProps {
   symbol: string;
   className?: string;
   height?: number;
+  onPeriodChange?: (period: string) => void;
+  selectedPeriod?: string;
 }
 
-export default function CandlestickChart({ 
-  data, 
-  indicators, 
-  symbol, 
+export default function CandlestickChart({
+  data,
+  indicators,
+  symbol,
   className = '',
-  height = 400 
+  height = 400,
+  onPeriodChange,
+  selectedPeriod = '3M'
 }: CandlestickChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isDark } = useTheme();
   const [selectedIndicators, setSelectedIndicators] = useState<string[]>(['sma20']);
-  const [timeRange, setTimeRange] = useState('3M');
+  const [timeRange, setTimeRange] = useState(selectedPeriod);
   const [isZoomed, setIsZoomed] = useState(false);
 
   const filteredData = useMemo(() => {
@@ -179,17 +183,13 @@ export default function CandlestickChart({
         switch (indicator) {
           case 'sma20':
             if (indicators.sma20) {
-              const line = d3.line<[Date, number]>()
-                .x(d => xScale(d[0]))
-                .y(d => yScale(d[1]))
-                .defined(d => d[1] !== null)
+              const line = d3.line<number>()
+                .x((d, i) => xScale(filteredData[i].date))
+                .y(d => yScale(d))
                 .curve(d3.curveMonotoneX);
 
-              const sma20Data = filteredData.map((d, i) => [d.date, indicators.sma20![i]] as [Date, number])
-                .filter(d => d[1] !== null);
-
               g.append("path")
-                .datum(sma20Data)
+                .datum(indicators.sma20)
                 .attr("fill", "none")
                 .attr("stroke", "#f59e0b")
                 .attr("stroke-width", 2)
@@ -198,17 +198,13 @@ export default function CandlestickChart({
             break;
           case 'sma50':
             if (indicators.sma50) {
-              const line = d3.line<[Date, number]>()
-                .x(d => xScale(d[0]))
-                .y(d => yScale(d[1]))
-                .defined(d => d[1] !== null)
+              const line = d3.line<number>()
+                .x((d, i) => xScale(filteredData[i].date))
+                .y(d => yScale(d))
                 .curve(d3.curveMonotoneX);
 
-              const sma50Data = filteredData.map((d, i) => [d.date, indicators.sma50![i]] as [Date, number])
-                .filter(d => d[1] !== null);
-
               g.append("path")
-                .datum(sma50Data)
+                .datum(indicators.sma50)
                 .attr("fill", "none")
                 .attr("stroke", "#8b5cf6")
                 .attr("stroke-width", 2)
@@ -217,17 +213,14 @@ export default function CandlestickChart({
             break;
           case 'bollinger':
             if (indicators.bollinger) {
-              const line = d3.line<[Date, number]>()
-                .x(d => xScale(d[0]))
-                .y(d => yScale(d[1]))
-                .defined(d => d[1] !== null)
+              const line = d3.line<number>()
+                .x((d, i) => xScale(filteredData[i].date))
+                .y(d => yScale(d))
                 .curve(d3.curveMonotoneX);
 
               // Upper band
-              const upperData = filteredData.map((d, i) => [d.date, indicators.bollinger!.upper[i]] as [Date, number])
-                .filter(d => d[1] !== null);
               g.append("path")
-                .datum(upperData)
+                .datum(indicators.bollinger.upper)
                 .attr("fill", "none")
                 .attr("stroke", "#06b6d4")
                 .attr("stroke-width", 1)
@@ -235,10 +228,8 @@ export default function CandlestickChart({
                 .attr("d", line);
 
               // Lower band
-              const lowerData = filteredData.map((d, i) => [d.date, indicators.bollinger!.lower[i]] as [Date, number])
-                .filter(d => d[1] !== null);
               g.append("path")
-                .datum(lowerData)
+                .datum(indicators.bollinger.lower)
                 .attr("fill", "none")
                 .attr("stroke", "#06b6d4")
                 .attr("stroke-width", 1)
@@ -246,10 +237,8 @@ export default function CandlestickChart({
                 .attr("d", line);
 
               // Middle band
-              const middleData = filteredData.map((d, i) => [d.date, indicators.bollinger!.middle[i]] as [Date, number])
-                .filter(d => d[1] !== null);
               g.append("path")
-                .datum(middleData)
+                .datum(indicators.bollinger.middle)
                 .attr("fill", "none")
                 .attr("stroke", "#06b6d4")
                 .attr("stroke-width", 2)
@@ -358,7 +347,16 @@ export default function CandlestickChart({
 
   }, [filteredData, indicators, selectedIndicators, isDark, height, symbol]);
 
-  const timeRanges = ['1D', '1W', '1M', '3M', '6M', '1Y', 'ALL'];
+  const timeRanges = [
+    { label: '1D', value: '1d' },
+    { label: '5D', value: '5d' },
+    { label: '1M', value: '1mo' },
+    { label: '3M', value: '3mo' },
+    { label: '6M', value: '6mo' },
+    { label: '1Y', value: '1y' },
+    { label: '2Y', value: '2y' },
+    { label: '5Y', value: '5y' }
+  ];
   const availableIndicators = [
     { key: 'sma20', label: 'SMA 20', color: '#f59e0b' },
     { key: 'sma50', label: 'SMA 50', color: '#8b5cf6' },
@@ -366,51 +364,6 @@ export default function CandlestickChart({
     { key: 'rsi', label: 'RSI', color: '#ef4444' },
     { key: 'macd', label: 'MACD', color: '#10b981' }
   ];
-
-  // Show loading state if no data
-  if (!data || data.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className={`relative ${className}`}
-      >
-        <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
-          isDark
-            ? 'bg-gray-900/80 border-gray-700'
-            : 'bg-white/80 border-gray-200'
-        }`}>
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className={`text-lg font-semibold ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}>
-              {symbol} Price Chart
-            </h3>
-            <p className={`text-sm ${
-              isDark ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              Interactive candlestick chart with technical indicators
-            </p>
-          </div>
-          <div className="flex items-center justify-center" style={{ height: height }}>
-            <div className="text-center">
-              <div className={`text-lg font-medium ${
-                isDark ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                Loading chart data...
-              </div>
-              <div className={`text-sm mt-2 ${
-                isDark ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                Please wait while we fetch the latest market data
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
@@ -420,8 +373,8 @@ export default function CandlestickChart({
       className={`relative ${className}`}
     >
       <div className={`rounded-xl overflow-hidden backdrop-blur-sm border ${
-        isDark
-          ? 'bg-gray-900/80 border-gray-700'
+        isDark 
+          ? 'bg-gray-900/80 border-gray-700' 
           : 'bg-white/80 border-gray-200'
       }`}>
         {/* Header with controls */}
@@ -444,17 +397,20 @@ export default function CandlestickChart({
             <div className="flex space-x-1">
               {timeRanges.map(range => (
                 <button
-                  key={range}
-                  onClick={() => setTimeRange(range)}
+                  key={range.value}
+                  onClick={() => {
+                    setTimeRange(range.value);
+                    onPeriodChange?.(range.value);
+                  }}
                   className={`px-3 py-1 text-xs font-medium rounded ${
-                    timeRange === range
+                    timeRange === range.value
                       ? 'bg-blue-500 text-white'
                       : isDark
                         ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {range}
+                  {range.label}
                 </button>
               ))}
             </div>
@@ -502,12 +458,12 @@ export default function CandlestickChart({
           {isZoomed && (
             <button
               onClick={() => {
-                if (svgRef.current) {
-                  const svg = d3.select(svgRef.current);
-                  const zoom = d3.zoom<SVGSVGElement, unknown>();
-                  (svg as any).call(zoom.transform, d3.zoomIdentity);
-                  setIsZoomed(false);
-                }
+                const svg = d3.select(svgRef.current);
+                svg.transition().duration(300).call(
+                  d3.zoom<SVGSVGElement, unknown>().transform,
+                  d3.zoomIdentity
+                );
+                setIsZoomed(false);
               }}
               className={`absolute top-4 right-4 px-3 py-1 text-xs font-medium rounded ${
                 isDark

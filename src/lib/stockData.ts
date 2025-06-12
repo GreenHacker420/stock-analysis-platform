@@ -4,10 +4,6 @@ import NodeCache from 'node-cache';
 // Cache for 5 minutes (300 seconds)
 const cache = new NodeCache({ stdTTL: 300 });
 
-// EODHD API Configuration
-const EODHD_API_KEY = process.env.EODHD_API_KEY || '6848fa019edce9.81077823';
-const EODHD_BASE_URL = 'https://eodhd.com/api';
-
 export interface StockQuote {
   symbol: string;
   companyName: string;
@@ -108,39 +104,26 @@ export class StockDataService {
   ): Promise<HistoricalData[]> {
     const cacheKey = `historical_${symbol}_${period}`;
     const cached = cache.get<HistoricalData[]>(cacheKey);
-
+    
     if (cached) {
       return cached;
     }
 
     try {
-      const formattedSymbol = this.formatIndianSymbol(symbol);
-      const startDate = this.getPeriodStartDate(period);
-      const endDate = new Date();
+      const result = await yahooFinance.historical(symbol, {
+        period1: this.getPeriodStartDate(period),
+        period2: new Date(),
+        interval: '1d',
+      });
 
-      // Format dates for EODHD API (YYYY-MM-DD)
-      const fromDate = startDate.toISOString().split('T')[0];
-      const toDate = endDate.toISOString().split('T')[0];
-
-      const response = await fetch(
-        `${EODHD_BASE_URL}/eod/${formattedSymbol}?api_token=${EODHD_API_KEY}&from=${fromDate}&to=${toDate}&period=d&fmt=json`
-      );
-
-      if (!response.ok) {
-        console.error(`Historical API Error: ${response.status} ${response.statusText}`);
-        return this.getMockHistoricalData(symbol, period);
-      }
-
-      const data = await response.json();
-
-      const historicalData: HistoricalData[] = data.map((item: any) => ({
-        date: new Date(item.date),
-        open: parseFloat(item.open) || 0,
-        high: parseFloat(item.high) || 0,
-        low: parseFloat(item.low) || 0,
-        close: parseFloat(item.close) || 0,
-        volume: parseInt(item.volume) || 0,
-        adjClose: parseFloat(item.adjusted_close) || parseFloat(item.close) || 0,
+      const historicalData: HistoricalData[] = result.map(item => ({
+        date: item.date,
+        open: item.open || 0,
+        high: item.high || 0,
+        low: item.low || 0,
+        close: item.close || 0,
+        volume: item.volume || 0,
+        adjClose: item.adjClose || 0,
       }));
 
       cache.set(cacheKey, historicalData);
@@ -148,52 +131,6 @@ export class StockDataService {
     } catch (error) {
       console.error(`Error fetching historical data for ${symbol}:`, error);
       return this.getMockHistoricalData(symbol, period);
-    }
-  }
-
-  private getMockHistoricalData(symbol: string, period: string): HistoricalData[] {
-    // Generate mock historical data for fallback
-    const days = this.getPeriodDays(period);
-    const mockData: HistoricalData[] = [];
-    const basePrice = 1000 + Math.random() * 2000; // Random base price between 1000-3000
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
-      const price = basePrice * (1 + variation);
-      const volume = Math.floor(Math.random() * 1000000) + 100000;
-
-      mockData.push({
-        date,
-        open: price * (1 + (Math.random() - 0.5) * 0.02),
-        high: price * (1 + Math.random() * 0.03),
-        low: price * (1 - Math.random() * 0.03),
-        close: price,
-        volume,
-        adjClose: price,
-      });
-    }
-
-    console.warn(`Using mock historical data for ${symbol} - API unavailable`);
-    return mockData;
-  }
-
-  private getPeriodDays(period: string): number {
-    switch (period) {
-      case '1d': return 1;
-      case '5d': return 5;
-      case '1mo': return 30;
-      case '3mo': return 90;
-      case '6mo': return 180;
-      case '1y': return 365;
-      case '2y': return 730;
-      case '5y': return 1825;
-      case '10y': return 3650;
-      case 'ytd': return Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (1000 * 60 * 60 * 24));
-      case 'max': return 3650; // 10 years max for mock data
-      default: return 365;
     }
   }
 
@@ -215,6 +152,7 @@ export class StockDataService {
       }
 
       const closes = historicalData.map(d => d.close);
+      const volumes = historicalData.map(d => d.volume);
       
       // Calculate technical indicators
       const rsi = this.calculateRSI(closes);
@@ -362,147 +300,59 @@ export class StockDataService {
 
   async searchStocks(query: string): Promise<{ symbol: string; name: string }[]> {
     try {
-      const response = await fetch(
-        `${EODHD_BASE_URL}/search/${query}?api_token=${EODHD_API_KEY}&type=stock&exchange=NSE`
-      );
-
-      if (!response.ok) {
-        console.error(`Search API Error: ${response.status} ${response.statusText}`);
-        return this.getMockSearchResults(query);
-      }
-
-      const data = await response.json();
-
-      return data.slice(0, 10).map((item: any) => ({
-        symbol: item.Code || item.symbol || '',
-        name: item.Name || item.name || item.Code || item.symbol || 'Unknown',
+      const results = await yahooFinance.search(query);
+      return results.quotes.slice(0, 10).map((quote: any) => ({
+        symbol: quote.symbol,
+        name: quote.longname || quote.shortname || quote.symbol,
       }));
     } catch (error) {
       console.error('Error searching stocks:', error);
-      return this.getMockSearchResults(query);
-    }
-  }
-
-  private getMockSearchResults(query: string): { symbol: string; name: string }[] {
-    try {
-      // Import dynamically to avoid require() in build
-      const mockStocks = [
-        { symbol: 'RELIANCE.NSE', companyName: 'Reliance Industries Limited' },
-        { symbol: 'TCS.NSE', companyName: 'Tata Consultancy Services Limited' },
-        { symbol: 'HDFCBANK.NSE', companyName: 'HDFC Bank Limited' },
-        { symbol: 'INFY.NSE', companyName: 'Infosys Limited' },
-        { symbol: 'ICICIBANK.NSE', companyName: 'ICICI Bank Limited' },
-        { symbol: 'HINDUNILVR.NSE', companyName: 'Hindustan Unilever Limited' },
-        { symbol: 'ITC.NSE', companyName: 'ITC Limited' },
-        { symbol: 'SBIN.NSE', companyName: 'State Bank of India' },
-        { symbol: 'BHARTIARTL.NSE', companyName: 'Bharti Airtel Limited' },
-        { symbol: 'ASIANPAINT.NSE', companyName: 'Asian Paints Limited' }
-      ];
-
-      const filtered = mockStocks.filter((stock) =>
-        stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
-        stock.companyName.toLowerCase().includes(query.toLowerCase())
-      );
-
-      return filtered.slice(0, 10).map((stock: any) => ({
-        symbol: stock.symbol,
-        name: stock.companyName,
-      }));
-    } catch (error) {
-      console.error('Error loading mock search data:', error);
       return [];
     }
   }
 
-  async getMultipleQuotes(symbols: string[]): Promise<(StockQuote | null)[]> {
-    const promises = symbols.map(symbol => this.getQuote(symbol));
-    try {
-      return await Promise.allSettled(promises).then(results =>
-        results.map(result =>
-          result.status === 'fulfilled' ? result.value : null
-        )
-      );
-    } catch (error) {
-      console.error('Error fetching multiple quotes:', error);
-      return symbols.map(() => null);
+  private getMockHistoricalData(symbol: string, period: string): HistoricalData[] {
+    const days = this.getPeriodDays(period);
+    const mockData: HistoricalData[] = [];
+    const basePrice = symbol === 'AAPL' ? 150 : symbol.includes('.NSE') || symbol.includes('.BSE') ? 2500 : 100;
+
+    for (let i = days; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+
+      const randomFactor = 0.95 + Math.random() * 0.1; // ±5% variation
+      const open = basePrice * randomFactor;
+      const close = open * (0.98 + Math.random() * 0.04); // ±2% from open
+      const high = Math.max(open, close) * (1 + Math.random() * 0.02);
+      const low = Math.min(open, close) * (1 - Math.random() * 0.02);
+      const volume = Math.floor(Math.random() * 50000000) + 10000000;
+
+      mockData.push({
+        date,
+        open,
+        high,
+        low,
+        close,
+        volume,
+        adjClose: close
+      });
     }
+
+    return mockData;
   }
 
-  async getQuoteWithFallback(symbol: string): Promise<StockQuote | null> {
-    try {
-      // Try to get real-time data first
-      const quote = await this.getQuote(symbol);
-      if (quote) return quote;
-
-      return null;
-    } catch (error) {
-      console.error(`Error fetching quote for ${symbol}:`, error);
-      return null;
+  private getPeriodDays(period: string): number {
+    switch (period) {
+      case '1d': return 1;
+      case '5d': return 5;
+      case '1mo': return 30;
+      case '3mo': return 90;
+      case '6mo': return 180;
+      case '1y': return 365;
+      case '2y': return 730;
+      case '5y': return 1825;
+      case '10y': return 3650;
+      default: return 90;
     }
-  }
-
-  // Utility methods
-  private formatIndianSymbol(symbol: string): string {
-    // If symbol already has exchange suffix, return as is
-    if (symbol.includes('.NSE') || symbol.includes('.BSE')) {
-      return symbol;
-    }
-
-    // Default to NSE for Indian stocks
-    return `${symbol}.NSE`;
-  }
-
-  // Market status and utility methods
-  isMarketOpen(): boolean {
-    const now = new Date();
-    const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-    const hours = istTime.getHours();
-    const minutes = istTime.getMinutes();
-    const day = istTime.getDay();
-
-    // Market is closed on weekends
-    if (day === 0 || day === 6) {
-      return false;
-    }
-
-    // Market hours: 9:15 AM to 3:30 PM IST
-    const currentTime = hours * 60 + minutes;
-    const marketOpen = 9 * 60 + 15; // 9:15 AM
-    const marketClose = 15 * 60 + 30; // 3:30 PM
-
-    return currentTime >= marketOpen && currentTime <= marketClose;
-  }
-
-  getMarketStatus(): { isOpen: boolean; nextOpen?: Date; message: string } {
-    const isOpen = this.isMarketOpen();
-
-    if (isOpen) {
-      return {
-        isOpen: true,
-        message: 'Market is currently open'
-      };
-    }
-
-    const now = new Date();
-    const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-    const nextOpen = new Date(istTime);
-
-    // If it's weekend, set to next Monday
-    if (istTime.getDay() === 0) { // Sunday
-      nextOpen.setDate(istTime.getDate() + 1);
-    } else if (istTime.getDay() === 6) { // Saturday
-      nextOpen.setDate(istTime.getDate() + 2);
-    } else if (istTime.getHours() >= 15 && istTime.getMinutes() >= 30) {
-      // After market close, set to next day
-      nextOpen.setDate(istTime.getDate() + 1);
-    }
-
-    nextOpen.setHours(9, 15, 0, 0);
-
-    return {
-      isOpen: false,
-      nextOpen,
-      message: `Market is closed. Next opening: ${nextOpen.toLocaleString()}`
-    };
   }
 }
