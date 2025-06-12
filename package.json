@@ -16,12 +16,7 @@
     "seed:users:dev": "tsx --env-file=.env src/scripts/seedUsers.ts",
     "seed:users:js": "node src/scripts/seedUsers.js",
     "db:seed": "node src/scripts/seedUsersSimple.js seed",
-    "db:clear": "node src/scripts/seedUsersSimple.js clear",
-    "db:verify": "npm run seed:users:dev verify",
-    "db:demo": "npm run seed:users:js demo",
-    "db:demo:full": "npm run seed:users:dev demo",
-    "db:simulate": "npm run seed:users:js simulate",
-    "db:test": "node src/scripts/testAuth.js"
+    "db:clear": "node src/scripts/seedUsersSimple.js clear"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.9.1",

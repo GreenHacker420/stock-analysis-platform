@@ -53,6 +53,14 @@ function SignInContent() {
     }
   })();
 
+  // If user is already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (session?.user && session.user.isActive) {
+      console.log('User already authenticated, redirecting to dashboard');
+      router.replace('/dashboard');
+    }
+  }, [session, router]);
+
   // Show loading while checking session
   if (status === 'loading') {
     return (
@@ -66,14 +74,6 @@ function SignInContent() {
       </div>
     );
   }
-
-  // If user is already authenticated, redirect to dashboard
-  useEffect(() => {
-    if (session?.user && session.user.isActive) {
-      console.log('User already authenticated, redirecting to dashboard');
-      router.replace('/dashboard');
-    }
-  }, [session, router]);
 
   // If user is already authenticated, show a message while redirecting
   if (session?.user && session.user.isActive) {

@@ -391,6 +391,5 @@ For support, email support@stockanalysis.com or create an issue in the GitHub re
 
 - [Next.js](https://nextjs.org/) for the amazing framework
 - [Google Gemini](https://ai.google.dev/) for AI capabilities
-- [Yahoo Finance](https://finance.yahoo.com/) for stock data
 - [Tailwind CSS](https://tailwindcss.com/) for styling
 - [MongoDB](https://www.mongodb.com/) for database solutions
