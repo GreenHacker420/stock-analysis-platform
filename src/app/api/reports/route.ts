@@ -125,6 +125,13 @@ export async function GET(request: NextRequest) {
           _id: report.portfolioId,
           name: portfolio.name
         } : null,
+        // Add metadata property that the frontend expects
+        metadata: {
+          confidence: report.riskAssessment?.riskScore || 75, // Use risk score as confidence or default to 75
+          aiModel: 'Gemini-1.5-Pro',
+        },
+        // Add validUntil property that the frontend expects
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
         isActive: true
       };
     });

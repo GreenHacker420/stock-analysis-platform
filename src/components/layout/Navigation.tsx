@@ -60,10 +60,10 @@ const Navigation = () => {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
                       isActive
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                        ? `border-blue-500 ${isDark ? 'text-white' : 'text-gray-900'}`
+                        : `border-transparent ${isDark ? 'text-gray-400 hover:text-gray-200 hover:border-gray-600' : 'text-gray-500 hover:border-gray-300 hover:text-gray-700'}`
                     }`}
                   >
                     <item.icon className="w-4 h-4 mr-2" />
@@ -105,7 +105,11 @@ const Navigation = () => {
           <div className="-mr-2 flex items-center sm:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              className={`inline-flex items-center justify-center p-2 rounded-md transition-colors duration-200 ${
+                isDark
+                  ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                  : 'text-gray-400 hover:text-gray-500 hover:bg-gray-100'
+              }`}
             >
               {mobileMenuOpen ? (
                 <XMarkIcon className="block h-6 w-6" />
@@ -119,7 +123,7 @@ const Navigation = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="sm:hidden">
+        <div className={`sm:hidden ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
           <div className="pt-2 pb-3 space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
@@ -127,10 +131,10 @@ const Navigation = () => {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                  className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200 ${
                     isActive
-                      ? 'bg-blue-50 border-blue-500 text-blue-700'
-                      : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+                      ? `border-blue-500 ${isDark ? 'bg-blue-900/20 text-blue-300' : 'bg-blue-50 text-blue-700'}`
+                      : `border-transparent ${isDark ? 'text-gray-400 hover:bg-gray-800 hover:border-gray-600 hover:text-gray-200' : 'text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'}`
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -142,20 +146,28 @@ const Navigation = () => {
               );
             })}
           </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
+          <div className={`pt-4 pb-3 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex items-center px-4">
               <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                  <span className="text-sm font-medium text-gray-700">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                  isDark ? 'bg-gray-700' : 'bg-gray-300'
+                }`}>
+                  <span className={`text-sm font-medium ${
+                    isDark ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     {session.user.name?.charAt(0)}
                   </span>
                 </div>
               </div>
               <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">
+                <div className={`text-base font-medium ${
+                  isDark ? 'text-gray-200' : 'text-gray-800'
+                }`}>
                   {session.user.name}
                 </div>
-                <div className="text-sm font-medium text-gray-500">
+                <div className={`text-sm font-medium ${
+                  isDark ? 'text-gray-400' : 'text-gray-500'
+                }`}>
                   {session.user.email}
                 </div>
               </div>
@@ -163,7 +175,11 @@ const Navigation = () => {
             <div className="mt-3 space-y-1">
               <button
                 onClick={() => signOut()}
-                className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 w-full text-left"
+                className={`block px-4 py-2 text-base font-medium w-full text-left transition-colors duration-200 ${
+                  isDark
+                    ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+                    : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+                }`}
               >
                 Sign out
               </button>
