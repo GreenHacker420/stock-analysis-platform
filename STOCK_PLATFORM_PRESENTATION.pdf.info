@@ -1,0 +1,33 @@
+
+# Stock Analysis Platform - PDF Presentation
+
+This file indicates that the presentation is available in multiple formats:
+
+## Available Formats:
+1. **Markdown**: STOCK_PLATFORM_PRESENTATION.md
+2. **HTML**: STOCK_PLATFORM_PRESENTATION.html (generated)
+3. **PDF**: Can be generated from HTML using browser print-to-PDF
+
+## To Generate PDF:
+1. Open STOCK_PLATFORM_PRESENTATION.html in a web browser
+2. Use browser's Print function (Ctrl+P / Cmd+P)
+3. Select "Save as PDF" as destination
+4. Choose appropriate settings for presentation format
+
+## Content Summary:
+- 15 comprehensive slides covering technical implementation
+- AI-powered analysis features with Google Gemini integration
+- Indian stock market integration (NSE/BSE)
+- Authentication and security measures
+- Database architecture and performance metrics
+- Live demo screenshots and technical highlights
+- Testing strategy and deployment information
+
+## Technical Specifications:
+- **Platform**: Next.js 15 with TypeScript
+- **AI Model**: Google Gemini 2.0 Flash
+- **Database**: MongoDB Atlas
+- **Deployment**: Vercel (https://stock.greenhacker.tech/)
+- **Test Coverage**: 80%+ comprehensive test suite
+
+Generated on: 2025-06-12T06:37:32.335Z

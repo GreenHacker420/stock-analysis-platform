@@ -4,27 +4,14 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-
-// Mock currency utilities
-const formatINR = (amount: number, options: any = {}) => {
-  const { showSymbol = true, useIndianNumbering = true, compact = false } = options;
-  
-  if (compact) {
-    if (amount >= 10000000) {
-      return `${showSymbol ? '₹' : ''}${(amount / 10000000).toFixed(2)} Cr`;
-    } else if (amount >= 100000) {
-      return `${showSymbol ? '₹' : ''}${(amount / 100000).toFixed(2)} L`;
-    }
-  }
-  
-  const symbol = showSymbol ? '₹' : '';
-  
-  if (useIndianNumbering) {
-    return symbol + amount.toLocaleString('en-IN');
-  }
-  
-  return symbol + amount.toLocaleString();
-};
+import {
+  formatINR,
+  formatCompactINR,
+  formatPercentage,
+  isIndianMarketOpen,
+  getMarketStatus,
+  isMarketHoliday
+} from '../../src/lib/currencyUtils';
 
 // Mock data validation
 const validateEmail = (email: string): boolean => {
